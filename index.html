@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>КАМЕРТОН — Исторический шпионский триллер</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ══════════════════════════════════════════════
+       RESET & BASE
+    ══════════════════════════════════════════════ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg:          #0f0d0a;
+      --bg-warm:     #13100c;
+      --bg-section:  #111009;
+      --brass:       rgba(168, 140, 96, 0.55);
+      --brass-solid: #a08860;
+      --brass-pale:  rgba(168, 140, 96, 0.18);
+      --brass-line:  rgba(168, 140, 96, 0.28);
+      --text-dim:    rgba(210, 198, 178, 0.42);
+      --col-max:     1340px;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      background: var(--bg);
+    }
+
+    body {
+      background: var(--bg);
+      color: rgba(218, 205, 185, 0.85);
+      font-family: 'Jost', 'Helvetica Neue', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════════════════
+       THIN GOLD SCROLL PROGRESS
+    ══════════════════════════════════════════════ */
+    #scroll-line {
+      position: fixed;
+      top: 0; left: 0;
+      width: 0%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--brass-solid), transparent);
+      z-index: 200;
+      pointer-events: none;
+      transition: width 0.08s linear;
+    }
+
+    /* ══════════════════════════════════════════════
+       SITE HEADER  — title page of an art book
+    ══════════════════════════════════════════════ */
+    #site-header {
+      width: 100%;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 80px 40px 60px;
+      position: relative;
+      overflow: hidden;
+      background: radial-gradient(ellipse 100% 80% at 50% 40%,
+        #1a1610 0%,
+        #0f0d0a 60%,
+        #0b0906 100%
+      );
+    }
+
+    /* Subtle grain texture overlay */
+    #site-header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Thin horizontal rule above kicker */
+    #site-header::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 1px;
+      height: 64px;
+      background: linear-gradient(to bottom, transparent, var(--brass-line));
+    }
+
+    .header-kicker {
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 10px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--brass-solid);
+      opacity: 0.65;
+      margin-bottom: 40px;
+    }
+
+    .header-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 300;
+      font-size: clamp(52px, 11vw, 148px);
+      letter-spacing: 0.18em;
+      line-height: 1;
+      color: rgba(230, 218, 198, 0.96);
+      margin-bottom: 28px;
+      /* Subtle vertical inset feel */
+      text-shadow:
+        0 1px 0 rgba(0,0,0,0.8),
+        0 -1px 0 rgba(255,255,255,0.04);
+    }
+
+    /* Thin gold ornamental line under title */
+    .header-ornament {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin: 0 auto 28px;
+      width: clamp(160px, 30vw, 320px);
+    }
+    .header-ornament span {
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--brass-solid), transparent);
+      opacity: 0.5;
+    }
+    .header-ornament svg {
+      flex-shrink: 0;
+      width: 12px; height: 12px;
+      fill: none;
+      stroke: var(--brass-solid);
+      opacity: 0.5;
+      stroke-width: 1;
+    }
+
+    .header-genre {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-style: italic;
+      font-weight: 300;
+      font-size: clamp(13px, 1.8vw, 18px);
+      letter-spacing: 0.12em;
+      color: rgba(210, 195, 168, 0.55);
+      line-height: 1.6;
+    }
+
+    .header-year {
+      margin-top: 56px;
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 9px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    /* Down arrow hint */
+    .scroll-hint {
+      position: absolute;
+      bottom: 36px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      opacity: 0.3;
+      animation: hintBob 2.4s ease-in-out infinite;
+    }
+    .scroll-hint span {
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 8px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--brass-solid);
+    }
+    .scroll-hint svg {
+      width: 16px; height: 16px;
+      stroke: var(--brass-solid);
+      fill: none;
+      stroke-width: 1;
+    }
+    @keyframes hintBob {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50% { transform: translateX(-50%) translateY(5px); }
+    }
+
+    /* ══════════════════════════════════════════════
+       ARCHIVE / PRESENTATION BODY
+    ══════════════════════════════════════════════ */
+    #archive {
+      width: 100%;
+      background: var(--bg-section);
+    }
+
+    /* ══════════════════════════════════════════════
+       SLIDE SECTIONS
+    ══════════════════════════════════════════════ */
+    .slide-section {
+      width: 100%;
+      padding: 48px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Alternating very subtle tone shift */
+    .slide-section:nth-child(even) {
+      background: rgba(20, 17, 12, 0.6);
+    }
+
+    /* The framed image panel */
+    .slide-frame {
+      width: 100%;
+      max-width: var(--col-max);
+      position: relative;
+    }
+
+    /* Outer glow / shadow wrapper */
+    .slide-frame::before {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border-radius: 6px;
+      background: transparent;
+      box-shadow:
+        0 0 0 1px rgba(168, 140, 96, 0.20),
+        0 8px 48px rgba(0, 0, 0, 0.65),
+        0 2px 12px rgba(0, 0, 0, 0.45);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .slide-frame img {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 8 / 5;
+      object-fit: fill;
+      border-radius: 5px;
+      position: relative;
+      z-index: 0;
+    }
+
+    /* Section index number — tiny dim label above each frame */
+    .slide-index {
+      width: 100%;
+      max-width: var(--col-max);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      opacity: 0.38;
+    }
+    .slide-index span {
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 9px;
+      letter-spacing: 0.38em;
+      text-transform: uppercase;
+      color: var(--brass-solid);
+      white-space: nowrap;
+    }
+    .slide-index-line {
+      flex: 1;
+      height: 1px;
+      background: var(--brass-solid);
+    }
+
+    /* ══════════════════════════════════════════════
+       DIVIDERS between slides
+    ══════════════════════════════════════════════ */
+    .slide-divider {
+      width: 100%;
+      max-width: var(--col-max);
+      margin: 0 auto;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(168, 140, 96, 0.10) 20%,
+        rgba(168, 140, 96, 0.18) 50%,
+        rgba(168, 140, 96, 0.10) 80%,
+        transparent 100%
+      );
+    }
+
+    /* ══════════════════════════════════════════════
+       FOOTER
+    ══════════════════════════════════════════════ */
+    #site-footer {
+      width: 100%;
+      padding: 52px 24px;
+      text-align: center;
+      background: #0b0906;
+      border-top: 1px solid rgba(168, 140, 96, 0.08);
+    }
+
+    .footer-line {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .footer-rule {
+      width: 60px;
+      height: 1px;
+      background: var(--brass-solid);
+      opacity: 0.25;
+    }
+    .footer-title {
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-weight: 300;
+      font-size: 22px;
+      letter-spacing: 0.28em;
+      color: rgba(210, 198, 178, 0.45);
+    }
+
+    .footer-copy {
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 9px;
+      letter-spacing: 0.3em;
+      color: rgba(168, 140, 96, 0.28);
+      text-transform: uppercase;
+      line-height: 1.8;
+    }
+
+    /* ══════════════════════════════════════════════
+       MUSIC PLAYER — pill-shaped glass panel
+    ══════════════════════════════════════════════ */
+    #music-player {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(15, 12, 8, 0.78);
+      backdrop-filter: blur(16px) saturate(120%);
+      -webkit-backdrop-filter: blur(16px) saturate(120%);
+      border: 1px solid rgba(168, 140, 96, 0.22);
+      border-radius: 100px;
+      padding: 8px 14px 8px 10px;
+      transition: opacity 0.4s, border-color 0.3s;
+      opacity: 0.72;
+    }
+    #music-player:hover {
+      opacity: 1;
+      border-color: rgba(168, 140, 96, 0.40);
+    }
+
+    /* Play/Pause button */
+    #mp-play {
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(168, 140, 96, 0.14);
+      border: 1px solid rgba(168, 140, 96, 0.38);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s, transform 0.15s;
+      flex-shrink: 0;
+      padding: 0;
+    }
+    #mp-play:hover {
+      background: rgba(168, 140, 96, 0.26);
+      transform: scale(1.06);
+    }
+    #mp-play svg {
+      width: 10px; height: 10px;
+      fill: rgba(220, 200, 162, 0.92);
+      stroke: none;
+    }
+
+    /* Mute */
+    #mp-mute {
+      background: none;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      padding: 2px;
+      opacity: 0.65;
+      transition: opacity 0.2s;
+    }
+    #mp-mute:hover { opacity: 1; }
+    #mp-mute svg {
+      width: 15px; height: 15px;
+      stroke: rgba(180, 155, 110, 0.85);
+      fill: none;
+      stroke-width: 1.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Volume slider */
+    #mp-vol {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 52px;
+      height: 1px;
+      background: rgba(168, 140, 96, 0.25);
+      border-radius: 1px;
+      outline: none;
+      cursor: pointer;
+    }
+    #mp-vol::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: rgba(168, 140, 96, 0.85);
+      cursor: pointer;
+    }
+    #mp-vol::-moz-range-thumb {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: rgba(168, 140, 96, 0.85);
+      border: none; cursor: pointer;
+    }
+
+    /* Label */
+    .mp-label {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+    }
+    .mp-label span {
+      font-family: 'Jost', sans-serif;
+      font-weight: 200;
+      font-size: 8px;
+      letter-spacing: 0.12em;
+      color: rgba(168, 140, 96, 0.45);
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .mp-label span:first-child {
+      color: rgba(200, 180, 140, 0.55);
+    }
+
+    /* Mobile: bottom center */
+    @media (max-width: 700px) {
+      #music-player {
+        top: auto;
+        bottom: 18px;
+        right: 50%;
+        transform: translateX(50%);
+        border-radius: 100px;
+      }
+      .mp-label span:nth-child(2) { display: none; }
+    }
+
+    /* ══════════════════════════════════════════════
+       BACK TO TOP
+    ══════════════════════════════════════════════ */
+    #top-btn {
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      z-index: 300;
+      width: 30px; height: 30px;
+      border-radius: 50%;
+      background: rgba(15, 12, 8, 0.70);
+      border: 1px solid rgba(168, 140, 96, 0.18);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s, border-color 0.25s;
+      backdrop-filter: blur(10px);
+    }
+    #top-btn.visible {
+      opacity: 0.42;
+      pointer-events: auto;
+    }
+    #top-btn:hover {
+      opacity: 0.85 !important;
+      border-color: rgba(168, 140, 96, 0.38);
+    }
+    #top-btn svg {
+      width: 12px; height: 12px;
+      stroke: rgba(200, 178, 138, 0.90);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* Mobile: hide top-btn when music player is bottom-center */
+    @media (max-width: 700px) {
+      #top-btn { display: none; }
+    }
+
+    /* ══════════════════════════════════════════════
+       ENTRANCE FADE — sections fade in on scroll
+    ══════════════════════════════════════════════ */
+    .slide-section {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+    .slide-section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* First slide always visible immediately */
+    .slide-section:first-child {
+      opacity: 1;
+      transform: none;
+    }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE
+    ══════════════════════════════════════════════ */
+    @media (max-width: 700px) {
+      .slide-section { padding: 28px 12px; }
+      #site-header { padding: 60px 24px 48px; min-height: 80vh; }
+      .header-year { margin-top: 36px; }
+    }
+
+    @media (max-width: 480px) {
+      .slide-index { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Scroll progress line -->
+<div id="scroll-line"></div>
+
+<!-- ══ SITE HEADER ════════════════════════════════ -->
+<header id="site-header" role="banner">
+
+  <p class="header-kicker">Веб-презентация проекта</p>
+
+  <h1 class="header-title">КАМЕРТОН</h1>
+
+  <div class="header-ornament" aria-hidden="true">
+    <span></span>
+    <!-- tuning fork glyph (simplified SVG) -->
+    <svg viewBox="0 0 24 24">
+      <path d="M9 3 C9 3 7 5 7 9 C7 12.5 9 14 9 14 L9 21" stroke-linecap="round"/>
+      <path d="M15 3 C15 3 17 5 17 9 C17 12.5 15 14 15 14 L15 21" stroke-linecap="round"/>
+      <path d="M9 9 L15 9" stroke-linecap="round"/>
+      <line x1="12" y1="14" x2="12" y2="21" stroke-linecap="round"/>
+    </svg>
+    <span></span>
+  </div>
+
+  <p class="header-genre">
+    Исторический шпионский триллер · Музыкальная драма · Семейная сага
+  </p>
+
+  <p class="header-year">2026</p>
+
+  <div class="scroll-hint" aria-hidden="true">
+    <span>Листать</span>
+    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+
+</header>
+
+<!-- ══ ARCHIVE — all slides ══════════════════════ -->
+<main id="archive">
+
+  <!-- Slide 01 -->
+  <section class="slide-section" id="s1">
+    <div class="slide-index" aria-hidden="true">
+      <span>01</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-01.jpg" alt="КАМЕРТОН — Обложка" loading="eager">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 02 -->
+  <section class="slide-section" id="s2">
+    <div class="slide-index" aria-hidden="true">
+      <span>02</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-02.jpg" alt="Содержание" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 03 -->
+  <section class="slide-section" id="s3">
+    <div class="slide-index" aria-hidden="true">
+      <span>03</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-03.jpg" alt="Логлайн, жанр, тон" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 04 -->
+  <section class="slide-section" id="s4">
+    <div class="slide-index" aria-hidden="true">
+      <span>04</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-04.jpg" alt="Мир и визуальный стиль" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 05 -->
+  <section class="slide-section" id="s5">
+    <div class="slide-index" aria-hidden="true">
+      <span>05</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-05.jpg" alt="Уникальная ценность" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 06 -->
+  <section class="slide-section" id="s6">
+    <div class="slide-index" aria-hidden="true">
+      <span>06</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-06.jpg" alt="Главные персонажи" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 07 -->
+  <section class="slide-section" id="s7">
+    <div class="slide-index" aria-hidden="true">
+      <span>07</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-07.jpg" alt="Главные персонажи (продолжение)" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 08 -->
+  <section class="slide-section" id="s8">
+    <div class="slide-index" aria-hidden="true">
+      <span>08</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-08.jpg" alt="Авторское высказывание" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 09 -->
+  <section class="slide-section" id="s9">
+    <div class="slide-index" aria-hidden="true">
+      <span>09</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-09.jpg" alt="Обзор сезона 1" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 10 -->
+  <section class="slide-section" id="s10">
+    <div class="slide-index" aria-hidden="true">
+      <span>10</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-10.jpg" alt="Обзор сезона 2" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 11 -->
+  <section class="slide-section" id="s11">
+    <div class="slide-index" aria-hidden="true">
+      <span>11</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-11.jpg" alt="Драматургия" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 12 -->
+  <section class="slide-section" id="s12">
+    <div class="slide-index" aria-hidden="true">
+      <span>12</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-12.jpg" alt="Аудитория и сравнительные аналоги" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 13 -->
+  <section class="slide-section" id="s13">
+    <div class="slide-index" aria-hidden="true">
+      <span>13</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-13.jpg" alt="Команда и статус разработки" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 14 -->
+  <section class="slide-section" id="s14">
+    <div class="slide-index" aria-hidden="true">
+      <span>14</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-14.jpg" alt="Бюджет и финансирование" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 15 -->
+  <section class="slide-section" id="s15">
+    <div class="slide-index" aria-hidden="true">
+      <span>15</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-15.jpg" alt="Дистрибуция и стратегия" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 16 -->
+  <section class="slide-section" id="s16">
+    <div class="slide-index" aria-hidden="true">
+      <span>16</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-16.jpg" alt="Потребности проекта" loading="lazy">
+    </div>
+  </section>
+
+  <div class="slide-divider"></div>
+
+  <!-- Slide 17 -->
+  <section class="slide-section" id="s17">
+    <div class="slide-index" aria-hidden="true">
+      <span>17</span>
+      <div class="slide-index-line"></div>
+    </div>
+    <div class="slide-frame">
+      <img src="assets/slide-17.jpg" alt="Правовой статус и права на проект" loading="lazy">
+    </div>
+  </section>
+
+</main>
+
+<!-- ══ FOOTER ═════════════════════════════════════ -->
+<footer id="site-footer">
+  <div class="footer-line" aria-hidden="true">
+    <div class="footer-rule"></div>
+    <div class="footer-title">КАМЕРТОН</div>
+    <div class="footer-rule"></div>
+  </div>
+  <p class="footer-copy">
+    © Каннингем Анна Грейс · Проект «Камертон» · 2026
+  </p>
+</footer>
+
+<!-- ══ AUDIO ══════════════════════════════════════ -->
+<audio id="aud" loop preload="auto">
+  <source src="assets/symphony.mp3" type="audio/mpeg">
+</audio>
+
+<!-- ══ MUSIC PLAYER ═══════════════════════════════ -->
+<div id="music-player" role="complementary" aria-label="Музыкальный проигрыватель">
+
+  <button id="mp-play" aria-label="Воспроизвести / Пауза">
+    <svg id="ico-play"  viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
+    <svg id="ico-pause" viewBox="0 0 24 24" style="display:none">
+      <rect x="6"  y="4" width="4" height="16" rx="0.5"/>
+      <rect x="14" y="4" width="4" height="16" rx="0.5"/>
+    </svg>
+  </button>
+
+  <button id="mp-mute" aria-label="Без звука / Со звуком">
+    <svg viewBox="0 0 24 24">
+      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+      <g id="mp-waves">
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </g>
+      <g id="mp-muted-ico" style="display:none">
+        <line x1="23" y1="9" x2="17" y2="15"/>
+        <line x1="17" y1="9" x2="23" y2="15"/>
+      </g>
+    </svg>
+  </button>
+
+  <input type="range" id="mp-vol" min="0" max="1" step="0.02" value="0.55" aria-label="Громкость">
+
+  <div class="mp-label" aria-hidden="true">
+    <span>М. Ипполитов-Иванов · Симфония №1</span>
+    <span>ми минор, op. 46</span>
+  </div>
+
+</div>
+
+<!-- ══ BACK TO TOP ════════════════════════════════ -->
+<button id="top-btn" aria-label="Вернуться наверх">
+  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+</button>
+
+<script>
+/* ── Audio ── */
+const aud = document.getElementById('aud');
+aud.volume = 0.55;
+let playing = false;
+let muted   = false;
+
+function startMusic() {
+  if (playing) return;
+  aud.play().then(() => {
+    playing = true;
+    syncPlayUI();
+  }).catch(() => {/* blocked — first-interaction fallback */});
+}
+
+window.addEventListener('load', startMusic);
+startMusic();
+
+function onFirstInteraction() {
+  startMusic();
+  ['click','scroll','keydown','touchstart','mousemove'].forEach(ev =>
+    document.removeEventListener(ev, onFirstInteraction)
+  );
+}
+['click','scroll','keydown','touchstart'].forEach(ev =>
+  document.addEventListener(ev, onFirstInteraction, { passive: true })
+);
+document.addEventListener('mousemove', onFirstInteraction, { passive: true, once: true });
+
+/* ── Play / Pause ── */
+function syncPlayUI() {
+  const p = !aud.paused;
+  document.getElementById('ico-play').style.display  = p ? 'none' : '';
+  document.getElementById('ico-pause').style.display = p ? '' : 'none';
+}
+
+document.getElementById('mp-play').addEventListener('click', e => {
+  e.stopPropagation();
+  if (aud.paused) {
+    aud.play().then(() => { playing = true; syncPlayUI(); }).catch(()=>{});
+  } else {
+    aud.pause(); syncPlayUI();
+  }
+});
+
+aud.addEventListener('play',  syncPlayUI);
+aud.addEventListener('pause', syncPlayUI);
+
+/* ── Volume ── */
+const volEl = document.getElementById('mp-vol');
+volEl.addEventListener('input', e => {
+  e.stopPropagation();
+  aud.volume = parseFloat(volEl.value);
+  if (muted && aud.volume > 0) { muted = false; aud.muted = false; syncMuteUI(); }
+});
+
+document.getElementById('mp-mute').addEventListener('click', e => {
+  e.stopPropagation();
+  muted = !muted;
+  aud.muted = muted;
+  syncMuteUI();
+  if (!playing) startMusic();
+});
+
+function syncMuteUI() {
+  document.getElementById('mp-waves').style.display     = muted ? 'none' : '';
+  document.getElementById('mp-muted-ico').style.display = muted ? ''     : 'none';
+}
+
+/* ── Scroll progress ── */
+const scrollLine = document.getElementById('scroll-line');
+const topBtn     = document.getElementById('top-btn');
+
+window.addEventListener('scroll', () => {
+  const s = window.scrollY;
+  const d = document.documentElement.scrollHeight - window.innerHeight;
+  scrollLine.style.width = (d > 0 ? (s / d) * 100 : 0) + '%';
+  topBtn.classList.toggle('visible', s > window.innerHeight * 0.6);
+}, { passive: true });
+
+topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+/* ── Scroll fade-in for sections ── */
+const sections = document.querySelectorAll('.slide-section');
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, {
+  rootMargin: '0px 0px -60px 0px',
+  threshold: 0.04
+});
+
+sections.forEach(sec => observer.observe(sec));
+
+/* Hide scroll hint after first scroll */
+const hint = document.querySelector('.scroll-hint');
+window.addEventListener('scroll', () => {
+  if (hint && window.scrollY > 80) hint.style.opacity = '0';
+}, { passive: true, once: true });
+</script>
+
+<script data-pplx-inline-edit>
+(function(){
+  if(window===window.top)return;
+  function inlineAll(orig,clone){
+    if(orig.nodeType!==1)return;
+    try{
+      var cs=getComputedStyle(orig);
+      var t='';
+      for(var i=0;i<cs.length;i++){t+=cs[i]+':'+cs.getPropertyValue(cs[i])+';';}
+      clone.style.cssText=t;
+    }catch(e){}
+    var oc=orig.children,cc=clone.children;
+    for(var j=0;j<oc.length&&j<cc.length;j++){inlineAll(oc[j],cc[j]);}
+  }
+  function stripExternal(clone){
+    var imgs=clone.querySelectorAll('img');
+    for(var i=0;i<imgs.length;i++){
+      var s=imgs[i].getAttribute('src');
+      if(s&&!s.startsWith('data:'))imgs[i].removeAttribute('src');
+    }
+    var all=clone.querySelectorAll('*');
+    for(var i=0;i<all.length;i++){
+      var st=all[i].style.cssText;
+      if(st&&st.indexOf('url(')>=0){
+        all[i].style.cssText=st.replace(/url\(["']?(?!data:)[^)"']*["']?\)/gi,'none');
+      }
+    }
+  }
+  window.addEventListener('message',function(e){
+    if(!e.data||e.data.type!=='INLINE_EDIT_CAPTURE_REQUEST')return;
+    var scrollX=window.scrollX||window.pageXOffset||0;
+    var scrollY=window.scrollY||window.pageYOffset||0;
+    var w=window.innerWidth,h=window.innerHeight;
+    try{
+      var clone=document.documentElement.cloneNode(true);
+      var rm=clone.querySelectorAll('script,link[rel="stylesheet"],style');
+      for(var i=0;i<rm.length;i++){rm[i].remove();}
+      inlineAll(document.documentElement,clone);
+      stripExternal(clone);
+      var html=new XMLSerializer().serializeToString(clone);
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" width="'+w+'" height="'+h+'">'
+        +'<foreignObject width="100%" height="100%">'
+        +'<div xmlns="http://www.w3.org/1999/xhtml" style="width:'+w+'px;height:'+h+'px;overflow:hidden">'
+        +'<div style="transform:translate(-'+scrollX+'px,-'+scrollY+'px);transform-origin:top left">'
+        +html+'</div></div></foreignObject></svg>';
+      var svgUrl='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+      var img=new Image();
+      img.onload=function(){
+        var c=document.createElement('canvas');c.width=w;c.height=h;
+        c.getContext('2d').drawImage(img,0,0);
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:c.toDataURL('image/png'),scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.onerror=function(){
+        window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+      };
+      img.src=svgUrl;
+    }catch(err){
+      window.parent.postMessage({type:'INLINE_EDIT_SCREENSHOT_RESULT',dataUrl:null,scrollX:scrollX,scrollY:scrollY},'*');
+    }
+  });
+})();
+</script></body>
+</html>
