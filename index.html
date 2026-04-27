@@ -34,6 +34,14 @@
     }
     #deck::-webkit-scrollbar { display: none; }
 
+    /* ─── КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ ───────────────────────────────────────────
+       1. isolation: isolate  — каждый слайд создаёт собственный stacking
+          context; z-index дочерних элементов не конкурируют с соседними
+          слайдами, контент предыдущего слайда не просвечивает сквозь фон
+          следующего.
+       2. overflow: hidden (уже было) — гарантирует, что .slide-bg с
+          scale(1.04) не вылезает за границы слайда.
+       ────────────────────────────────────────────────────────────────── */
     .slide {
       width: 100%; height: 100vh;
       scroll-snap-align: start;
@@ -42,15 +50,13 @@
       display: flex;
       align-items: flex-end;
       overflow: hidden;
-      /* FIX: каждый слайд получает свой изолированный stacking context —
-         контент предыдущего слайда больше не просвечивает через фон следующего */
-      isolation: isolate;
+      isolation: isolate;   /* создаём изолированный stacking context */
     }
 
+    /* ─── фон: z-index 0 внутри изолированного контекста слайда ─── */
     .slide-bg {
       position: absolute;
       inset: 0;
-      /* FIX: явно прибиваем фон к нижнему слою внутри изолированного контекста */
       z-index: 0;
       background-size: cover;
       background-position: center center;
@@ -60,6 +66,7 @@
     }
     .slide.visible .slide-bg { transform: scale(1.0); }
 
+    /* ─── градиентный оверлей: z-index 1 ─── */
     .slide::after {
       content: '';
       position: absolute;
@@ -85,6 +92,8 @@
       );
     }
 
+    /* ─── контент: z-index 2 — поверх фона и оверлея, но строго
+       внутри своего изолированного контекста (.slide) ─── */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -658,10 +667,13 @@ const deck     = document.getElementById('deck');
 const total    = slides.length;
 let currentIdx = 0;
 
-/* Наблюдатель: добавляем visible при входе, убираем при выходе.
-   FIX: threshold повышен до 0.6 — слайд получает класс visible
-   только когда занимает 60% вьюпорта, исключая срабатывание
-   при промежуточных позициях скролла между двумя слайдами. */
+/* ─── IntersectionObserver ──────────────────────────────────────────────
+   threshold: 0.65 — слайд получает класс .visible только когда
+   занимает не менее 65% вьюпорта. При промежуточных позициях скролла
+   (переходе между двумя слайдами) ни один слайд не активирован,
+   поэтому .slide-content у предыдущего слайда уже скрыт (opacity:0),
+   а у следующего ещё не показан — просвечивание исключено.
+   ──────────────────────────────────────────────────────────────────── */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
@@ -675,7 +687,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.6 });
+}, { root: deck, threshold: 0.65 });
 
 slides.forEach(s => io.observe(s));
 
