@@ -1,30 +1,4 @@
 <!DOCTYPE html>
-<!--
-  ╔══════════════════════════════════════════════════════════════════════╗
-  ║  КАМЕРТОН — Редактируемая веб-презентация                          ║
-  ║  © Каннингем Анна Грейс, 2026                                       ║
-  ╠══════════════════════════════════════════════════════════════════════╣
-  ║  КАК РЕДАКТИРОВАТЬ:                                                  ║
-  ║                                                                      ║
-  ║  ТЕКСТ:  найдите нужный слайд по комментарию "СЛАЙД XX"              ║
-  ║          и редактируйте HTML внутри <div class="slide-text">         ║
-  ║          Используйте:                                                ║
-  ║            <p>обычный абзац</p>                                       ║
-  ║            <strong>жирный текст</strong>                             ║
-  ║            <em>курсив</em>                                            ║
-  ║            <ul><li>пункт списка</li></ul>                            ║
-  ║                                                                      ║
-  ║  КАРТИНКИ: найдите <img src="имя_файла.jpg"> и замените              ║
-  ║            src на имя вашего файла (он должен лежать рядом)          ║
-  ║            Например: src="my-photo.jpg"                              ║
-  ║                                                                      ║
-  ║  ПОРЯДОК СЛАЙДОВ: вырежьте блок <section>...</section> целиком       ║
-  ║            и вставьте в нужное место                                 ║
-  ║                                                                      ║
-  ║  ДОБАВИТЬ СЛАЙД: скопируйте любой блок <section> и измените id        ║
-  ║                                                                      ║
-  ╚══════════════════════════════════════════════════════════════════════╝
--->
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
@@ -35,846 +9,629 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Jost:wght@200;300;400&display=swap" rel="stylesheet">
 
   <style>
-    /* ══════════════════════════════════════════════
-       БАЗОВЫЕ СТИЛИ — можно менять цвета и шрифты
-    ══════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* ── Цвета — меняйте здесь ── */
-      --bg-dark:     #0f0d0a;           /* тёмный фон */
-      --bg-light:    #F5EDE3;           /* светлый фон */
-      --text-dark:   rgba(225,210,185,0.90); /* текст на тёмном */
-      --text-light:  #2C2825;           /* текст на светлом */
-      --brass:       #a08860;           /* золотой акцент */
-      --brass-faint: rgba(160,136,96,0.20);
-      --col-max:     1340px;            /* максимальная ширина контента */
-
-      /* ── Шрифты ── */
+      --brass:       #a08860;
+      --brass-faint: rgba(160,136,96,0.18);
       --font-serif:  'Cormorant Garamond', Georgia, serif;
       --font-sans:   'Jost', 'Helvetica Neue', sans-serif;
     }
 
-    html { scroll-behavior: smooth; background: var(--bg-dark); }
-
-    body {
-      background: var(--bg-dark);
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #0b0906;
       font-family: var(--font-sans);
-      font-weight: 300;
-      font-size: 15px;
-      line-height: 1.65;
-      overflow-x: hidden;
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Тонкая линия прогресса прокрутки ── */
-    #scroll-line {
-      position: fixed; top: 0; left: 0; width: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, var(--brass), transparent);
-      z-index: 200; pointer-events: none; transition: width 0.08s linear;
+    /* ── Scroll container ── */
+    #deck {
+      width: 100%; height: 100vh;
+      overflow-y: scroll;
+      scroll-snap-type: y mandatory;
+      scrollbar-width: none;
+    }
+    #deck::-webkit-scrollbar { display: none; }
+
+    /* ── Each slide ── */
+    .slide {
+      width: 100%; height: 100vh;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+      display: flex;
+      align-items: flex-end;
+      overflow: hidden;
     }
 
-    /* ══════════════════════════════════════════════
-       ЗАГОЛОВОК СТРАНИЦЫ
-    ══════════════════════════════════════════════ */
-    #site-header {
-      width: 100%; min-height: 100vh;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      text-align: center; padding: 80px 40px 60px;
-      background: radial-gradient(ellipse 100% 80% at 50% 40%, #1a1610 0%, #0f0d0a 60%, #0b0906 100%);
+    /* Background image — full bleed */
+    .slide-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center center;
+      background-repeat: no-repeat;
+      transition: transform 8s ease-out;
+      transform: scale(1.04);
+    }
+    .slide.visible .slide-bg { transform: scale(1.0); }
+
+    /* Gradient overlay — bottom-up */
+    .slide::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(8,6,4,0.92) 0%,
+        rgba(8,6,4,0.65) 28%,
+        rgba(8,6,4,0.18) 55%,
+        transparent 100%
+      );
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Light slides — reverse gradient (top-down, cream) */
+    .slide.light::after {
+      background: linear-gradient(
+        to bottom,
+        rgba(240,232,218,0.88) 0%,
+        rgba(240,232,218,0.55) 28%,
+        rgba(240,232,218,0.12) 55%,
+        transparent 100%
+      );
+    }
+
+    /* Text panel */
+    .slide-content {
       position: relative;
+      z-index: 2;
+      width: 100%;
+      padding: 0 6vw 5vh;
+      max-width: 1400px;
+      margin: 0 auto;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s;
     }
-    #site-header::after {
-      content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-      width: 1px; height: 64px;
-      background: linear-gradient(to bottom, transparent, rgba(160,136,96,0.3));
+    .slide.visible .slide-content { opacity: 1; transform: none; }
+
+    /* Light slides — content at top */
+    .slide.light {
+      align-items: flex-start;
     }
-    .header-kicker {
-      font-size: 10px; letter-spacing: 0.35em; text-transform: uppercase;
-      color: var(--brass); opacity: 0.65; margin-bottom: 40px;
+    .slide.light .slide-content {
+      padding: 5vh 6vw 0;
     }
-    .header-title {
-      font-family: var(--font-serif); font-weight: 300;
-      font-size: clamp(52px, 11vw, 148px); letter-spacing: 0.18em; line-height: 1;
-      color: rgba(230,218,198,0.96); margin-bottom: 28px;
+
+    /* Slide number */
+    .slide-num {
+      font-size: 9px;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: var(--brass);
+      opacity: 0.55;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
-    .header-ornament {
+    .slide-num::after {
+      content: '';
+      width: 40px; height: 1px;
+      background: var(--brass); opacity: 0.4;
+    }
+
+    /* Title */
+    .slide-title {
+      font-family: var(--font-serif);
+      font-weight: 300;
+      line-height: 1.15;
+      letter-spacing: 0.06em;
+      margin-bottom: 16px;
+    }
+    .slide:not(.light) .slide-title {
+      font-size: clamp(26px, 4vw, 54px);
+      color: rgba(232,220,198,0.97);
+    }
+    .slide.light .slide-title {
+      font-size: clamp(22px, 3vw, 42px);
+      color: #1a1512;
+    }
+
+    /* Body text */
+    .slide-body {
+      font-weight: 300;
+      font-size: clamp(11px, 1.1vw, 14px);
+      line-height: 1.75;
+      max-width: 680px;
+    }
+    .slide:not(.light) .slide-body { color: rgba(210,196,172,0.80); }
+    .slide.light       .slide-body { color: rgba(40,33,26,0.80); }
+
+    .slide-body p  { margin-bottom: 10px; }
+    .slide-body ul { margin: 8px 0 10px 16px; }
+    .slide-body li { margin-bottom: 6px; list-style: disc; }
+    .slide-body strong { font-weight: 600; }
+    .slide:not(.light) .slide-body strong { color: rgba(235,222,198,1); }
+    .slide.light       .slide-body strong { color: #0f0d0a; }
+    .slide-body em {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 1.05em;
+    }
+
+    /* Copyright line */
+    .slide-copy {
+      margin-top: 14px;
+      font-size: 7px;
+      letter-spacing: 0.18em;
+      line-height: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .slide:not(.light) .slide-copy { color: rgba(176,168,152,0.38); }
+    .slide.light       .slide-copy { color: rgba(90,80,68,0.35); }
+
+    /* ── Cover slide (01) special treatment ── */
+    #s01 .slide-content {
+      align-items: center;
+      text-align: center;
+      padding-bottom: 8vh;
+    }
+    #s01 .slide-title {
+      font-size: clamp(48px, 10vw, 130px);
+      letter-spacing: 0.22em;
+      color: rgba(232,220,198,0.97);
+      margin-bottom: 12px;
+    }
+    #s01 .slide-num { justify-content: center; }
+    #s01 .slide-num::after { display: none; }
+    #s01 .slide-body {
+      text-align: center;
+      margin: 0 auto;
+      font-size: clamp(11px, 1.2vw, 15px);
+    }
+    #s01 .ornament {
       display: flex; align-items: center; gap: 14px;
-      margin: 0 auto 28px; width: clamp(160px, 30vw, 320px);
+      margin: 18px auto 18px;
+      width: clamp(140px, 26vw, 300px);
     }
-    .header-ornament span {
+    #s01 .ornament span {
       flex: 1; height: 1px;
       background: linear-gradient(90deg, transparent, var(--brass), transparent);
-      opacity: 0.5;
+      opacity: 0.4;
     }
-    .header-ornament svg {
-      width: 12px; height: 12px; fill: none; stroke: var(--brass);
-      opacity: 0.5; stroke-width: 1;
+    #s01 .ornament svg {
+      width: 11px; height: 11px;
+      fill: none; stroke: var(--brass);
+      opacity: 0.45; stroke-width: 1;
     }
-    .header-genre {
-      font-family: var(--font-serif); font-style: italic; font-weight: 300;
-      font-size: clamp(13px, 1.8vw, 18px); letter-spacing: 0.12em;
-      color: rgba(210,195,168,0.55); line-height: 1.6;
+
+    /* ── Contents slide (02) ── */
+    #s02 .slide-body {
+      columns: 2; column-gap: 40px;
+      max-width: 560px;
     }
-    .header-year {
-      margin-top: 56px; font-size: 9px; letter-spacing: 0.4em;
-      text-transform: uppercase; color: rgba(210,198,178,0.35);
+    #s02 .toc-item {
+      display: flex; gap: 10px; align-items: baseline;
+      margin-bottom: 8px; break-inside: avoid;
     }
-    .scroll-hint {
-      position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      opacity: 0.3; animation: hintBob 2.4s ease-in-out infinite;
+    #s02 .toc-num {
+      font-size: 9px; letter-spacing: 0.2em;
+      color: var(--brass); opacity: 0.7;
+      min-width: 22px;
     }
-    .scroll-hint span { font-size: 8px; letter-spacing: 0.35em; text-transform: uppercase; color: var(--brass); }
-    .scroll-hint svg { width: 16px; height: 16px; stroke: var(--brass); fill: none; stroke-width: 1; }
+    #s02 .toc-label {
+      font-size: 11px; letter-spacing: 0.06em;
+      color: rgba(215,200,175,0.78);
+    }
+
+    /* ── Slide counter (bottom right) ── */
+    #slide-counter {
+      position: fixed;
+      bottom: 28px; right: 32px;
+      z-index: 100;
+      font-size: 9px; letter-spacing: 0.3em;
+      color: rgba(160,136,96,0.40);
+      pointer-events: none;
+    }
+
+    /* ── Progress bar ── */
+    #progress {
+      position: fixed;
+      left: 0; top: 0;
+      width: 0%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--brass), transparent);
+      z-index: 200;
+      transition: width 0.12s linear;
+    }
+
+    /* ── Music player ── */
+    #music-player {
+      position: fixed; top: 22px; right: 26px; z-index: 300;
+      display: flex; align-items: center; gap: 9px;
+      background: rgba(12,9,6,0.75);
+      backdrop-filter: blur(18px);
+      border: 1px solid rgba(160,136,96,0.20);
+      border-radius: 100px;
+      padding: 7px 13px 7px 8px;
+      opacity: 0.7;
+      transition: opacity 0.3s, border-color 0.3s;
+    }
+    #music-player:hover { opacity: 1; border-color: rgba(160,136,96,0.38); }
+    #mp-play {
+      width: 28px; height: 28px; border-radius: 50%;
+      background: rgba(160,136,96,0.12);
+      border: 1px solid rgba(160,136,96,0.32);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; padding: 0;
+      transition: background 0.2s;
+    }
+    #mp-play:hover { background: rgba(160,136,96,0.24); }
+    #mp-play svg { width: 9px; height: 9px; fill: rgba(220,200,162,0.95); stroke: none; }
+    #mp-mute { background: none; border: none; cursor: pointer; padding: 2px; opacity: 0.6; transition: opacity 0.2s; }
+    #mp-mute:hover { opacity: 1; }
+    #mp-mute svg { width: 14px; height: 14px; stroke: rgba(180,155,110,0.85); fill: none; stroke-width: 1.4; stroke-linecap: round; }
+    #mp-vol { -webkit-appearance: none; width: 48px; height: 1px; background: rgba(160,136,96,0.22); outline: none; cursor: pointer; }
+    #mp-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 8px; height: 8px; border-radius: 50%; background: rgba(160,136,96,0.85); }
+    .mp-label { display: flex; flex-direction: column; gap: 1px; }
+    .mp-label span { font-size: 7.5px; letter-spacing: 0.1em; color: rgba(168,140,96,0.42); white-space: nowrap; line-height: 1.5; }
+    .mp-label span:first-child { color: rgba(200,180,140,0.52); }
+
+    /* ── Scroll hint ── */
+    #scroll-hint {
+      position: fixed;
+      bottom: 28px; left: 50%; transform: translateX(-50%);
+      z-index: 100;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      opacity: 0.3;
+      animation: hintBob 2.6s ease-in-out infinite;
+      transition: opacity 0.4s;
+    }
+    #scroll-hint.hidden { opacity: 0; pointer-events: none; }
+    #scroll-hint span { font-size: 7px; letter-spacing: 0.4em; text-transform: uppercase; color: var(--brass); }
+    #scroll-hint svg { width: 14px; height: 14px; stroke: var(--brass); fill: none; stroke-width: 1.2; }
     @keyframes hintBob {
       0%,100% { transform: translateX(-50%) translateY(0); }
       50%      { transform: translateX(-50%) translateY(5px); }
     }
 
-    /* ══════════════════════════════════════════════
-       СЛАЙДЫ
-    ══════════════════════════════════════════════ */
-    #archive { width: 100%; }
-
-    /* Анимация появления при прокрутке */
-    .slide {
-      width: 100%; padding: 52px 24px;
-      opacity: 0; transform: translateY(16px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-    .slide.visible { opacity: 1; transform: none; }
-    .slide:first-child { opacity: 1; transform: none; }
-
-    /* Тёмный и светлый вариант */
-    .slide-dark  { background: #0f0d0a; color: var(--text-dark); }
-    .slide-light { background: #F5EDE3; color: var(--text-light); }
-
-    /* Внутренний контейнер: текст слева, картинка справа */
-    .slide-inner {
-      max-width: var(--col-max);
-      margin: 0 auto;
-      display: grid;
-      grid-template-columns: 1fr 1fr;   /* ← меняйте пропорции здесь */
-      gap: 40px;
-      align-items: start;
-    }
-
-    /* Слайды с только текстом или только картинкой — полная ширина */
-    .slide-inner.full-width { grid-template-columns: 1fr; }
-
-    /* Текстовая колонка */
-    .slide-text { }
-
-    .slide-text h1, .slide-text h2 {
-      font-family: var(--font-serif); font-weight: 400;
-      margin-bottom: 18px; line-height: 1.2;
-    }
-    .slide-dark  .slide-text h1,
-    .slide-dark  .slide-text h2 { color: rgba(230,218,198,0.95); }
-    .slide-light .slide-text h1,
-    .slide-light .slide-text h2 { color: #1a1714; }
-
-    .slide-text h1 { font-size: clamp(28px, 3.5vw, 44px); letter-spacing: 0.1em; }
-    .slide-text h2 { font-size: clamp(18px, 2.2vw, 26px); letter-spacing: 0.06em; }
-
-    /* Золотая линия под заголовком */
-    .slide-text h2::after {
-      content: ''; display: block; width: 100%; height: 1px;
-      background: var(--brass); opacity: 0.35; margin-top: 10px;
-    }
-
-    .slide-text p  { margin-bottom: 14px; }
-    .slide-text ul { margin: 10px 0 14px 18px; }
-    .slide-text li { margin-bottom: 8px; list-style: disc; }
-
-    .slide-dark  .slide-text p,
-    .slide-dark  .slide-text li { color: rgba(218,205,185,0.82); }
-    .slide-light .slide-text p,
-    .slide-light .slide-text li { color: #3A3632; }
-
-    .slide-text strong { font-weight: 600; }
-    .slide-dark  .slide-text strong { color: rgba(235,220,195,0.98); }
-    .slide-light .slide-text strong { color: #1a1714; }
-
-    .slide-text em {
-      font-family: var(--font-serif); font-style: italic; font-size: 1.05em;
-    }
-    .slide-dark  .slide-text em { color: rgba(220,205,175,0.75); }
-    .slide-light .slide-text em { color: #5A4E40; }
-
-    /* Изображение */
-    .slide-image {
-      position: relative;
-    }
-    .slide-image::before {
-      content: ''; position: absolute; inset: -1px; border-radius: 5px;
-      box-shadow: 0 0 0 1px rgba(160,136,96,0.22), 0 8px 40px rgba(0,0,0,0.5);
-      pointer-events: none; z-index: 1;
-    }
-    .slide-image img {
-      display: block; width: 100%; height: auto;
-      border-radius: 4px; position: relative; z-index: 0;
-    }
-
-    /* Маленький тег «заменить фото» при наведении (видно только в редакторе браузера) */
-    .slide-image img:hover { outline: 2px dashed var(--brass); outline-offset: 4px; cursor: pointer; }
-
-    /* ── Индекс-метка секции ── */
-    .slide-num {
-      font-size: 8px; letter-spacing: 0.4em; text-transform: uppercase;
-      color: var(--brass); opacity: 0.4;
-      display: flex; align-items: center; gap: 12px; margin-bottom: 20px;
-    }
-    .slide-num::after {
-      content: ''; flex: 1; height: 1px; background: var(--brass); opacity: 0.3;
-    }
-
-    /* ── Разделитель ── */
-    .divider {
-      height: 1px; max-width: var(--col-max); margin: 0 auto;
-      background: linear-gradient(90deg, transparent, rgba(160,136,96,0.15) 50%, transparent);
-    }
-
-    /* ══════════════════════════════════════════════
-       КОПИРАЙТ СТРОКА
-    ══════════════════════════════════════════════ */
-    .slide-copyright {
-      font-size: 7px; letter-spacing: 0.15em; opacity: 0.35; margin-top: 24px;
-    }
-    .slide-dark  .slide-copyright { color: rgba(168,140,96,0.6); }
-    .slide-light .slide-copyright { color: #7A6E60; }
-
-    /* ══════════════════════════════════════════════
-       ПЛЕЕР МУЗЫКИ
-    ══════════════════════════════════════════════ */
-    #music-player {
-      position: fixed; top: 24px; right: 24px; z-index: 300;
-      display: flex; align-items: center; gap: 10px;
-      background: rgba(15,12,8,0.78); backdrop-filter: blur(16px);
-      border: 1px solid rgba(160,136,96,0.22); border-radius: 100px;
-      padding: 8px 14px 8px 10px; opacity: 0.72; transition: opacity 0.3s, border-color 0.3s;
-    }
-    #music-player:hover { opacity: 1; border-color: rgba(160,136,96,0.40); }
-    #mp-play {
-      width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(160,136,96,0.14); border: 1px solid rgba(160,136,96,0.38);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: background 0.2s; flex-shrink: 0; padding: 0;
-    }
-    #mp-play:hover { background: rgba(160,136,96,0.26); }
-    #mp-play svg { width: 10px; height: 10px; fill: rgba(220,200,162,0.92); stroke: none; }
-    #mp-mute { background: none; border: none; cursor: pointer; padding: 2px; opacity: 0.65; transition: opacity 0.2s; }
-    #mp-mute:hover { opacity: 1; }
-    #mp-mute svg { width: 15px; height: 15px; stroke: rgba(180,155,110,0.85); fill: none; stroke-width: 1.4; stroke-linecap: round; }
-    #mp-vol { -webkit-appearance: none; width: 52px; height: 1px; background: rgba(160,136,96,0.25); outline: none; cursor: pointer; }
-    #mp-vol::-webkit-slider-thumb { -webkit-appearance: none; width: 9px; height: 9px; border-radius: 50%; background: rgba(160,136,96,0.85); }
-    .mp-label { display: flex; flex-direction: column; gap: 1px; }
-    .mp-label span { font-size: 8px; letter-spacing: 0.1em; color: rgba(168,140,96,0.45); white-space: nowrap; line-height: 1.4; }
-    .mp-label span:first-child { color: rgba(200,180,140,0.55); }
-
-    /* ── Кнопка «наверх» ── */
-    #top-btn {
-      position: fixed; bottom: 24px; left: 24px; z-index: 300;
-      width: 30px; height: 30px; border-radius: 50%;
-      background: rgba(15,12,8,0.70); border: 1px solid rgba(160,136,96,0.18);
-      cursor: pointer; display: flex; align-items: center; justify-content: center;
-      opacity: 0; pointer-events: none; transition: opacity 0.3s;
-      backdrop-filter: blur(10px);
-    }
-    #top-btn.visible { opacity: 0.42; pointer-events: auto; }
-    #top-btn:hover { opacity: 0.85 !important; }
-    #top-btn svg { width: 12px; height: 12px; stroke: rgba(200,178,138,0.90); fill: none; stroke-width: 1.5; stroke-linecap: round; }
-
-    /* ── ФУТЕР ── */
-    #site-footer {
-      text-align: center; padding: 52px 24px;
-      background: #0b0906; border-top: 1px solid rgba(160,136,96,0.08);
-    }
-    .footer-line { display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; }
-    .footer-rule { width: 60px; height: 1px; background: var(--brass); opacity: 0.25; }
-    .footer-title { font-family: var(--font-serif); font-weight: 300; font-size: 22px; letter-spacing: 0.28em; color: rgba(210,198,178,0.45); }
-    .footer-copy { font-size: 9px; letter-spacing: 0.3em; color: rgba(160,136,96,0.28); text-transform: uppercase; line-height: 1.8; }
-
-    /* ── Мобильный ── */
-    @media (max-width: 860px) {
-      .slide-inner { grid-template-columns: 1fr; }
-      .slide-image { order: -1; }  /* картинка сверху на мобильном */
-      #music-player { top: auto; bottom: 18px; right: 50%; transform: translateX(50%); }
+    /* ── Mobile ── */
+    @media (max-width: 768px) {
+      .slide-content { padding: 0 5vw 6vh; }
+      .slide.light .slide-content { padding: 6vh 5vw 0; }
+      #s02 .slide-body { columns: 1; }
+      #music-player { top: auto; bottom: 16px; right: 50%; transform: translateX(50%); }
       .mp-label span:nth-child(2) { display: none; }
-      #top-btn { display: none; }
-    }
-    @media (max-width: 480px) {
-      .slide { padding: 28px 12px; }
-      .slide-num { display: none; }
+      #slide-counter { display: none; }
     }
   </style>
 </head>
 <body>
 
-<div id="scroll-line"></div>
+<div id="progress"></div>
+<div id="slide-counter">01 / 17</div>
 
-<!-- ══ ЗАГОЛОВОК СТРАНИЦЫ ══════════════════════════════════════════════════ -->
-<!-- Редактируйте текст прямо здесь -->
-<header id="site-header">
-  <p class="header-kicker">Веб-презентация проекта</p>
-  <h1 class="header-title">КАМЕРТОН</h1>
-  <div class="header-ornament" aria-hidden="true">
-    <span></span>
-    <svg viewBox="0 0 24 24">
-      <path d="M9 3 C9 3 7 5 7 9 C7 12.5 9 14 9 14 L9 21" stroke-linecap="round"/>
-      <path d="M15 3 C15 3 17 5 17 9 C17 12.5 15 14 15 14 L15 21" stroke-linecap="round"/>
-      <path d="M9 9 L15 9" stroke-linecap="round"/>
-      <line x1="12" y1="14" x2="12" y2="21" stroke-linecap="round"/>
-    </svg>
-    <span></span>
-  </div>
-  <p class="header-genre">Исторический шпионский триллер · Музыкальная драма · Семейная сага</p>
-  <p class="header-year">2026</p>
-  <div class="scroll-hint" aria-hidden="true">
-    <span>Листать</span>
-    <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-</header>
+<div id="scroll-hint" aria-hidden="true">
+  <span>Листать</span>
+  <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+</div>
 
-<!-- ══ СЛАЙДЫ ══════════════════════════════════════════════════════════════ -->
-<main id="archive">
+<div id="deck">
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 01 — КАМЕРТОН
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-01">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>КАМЕРТОН</strong></p>
-<p>Исторический шпионский триллер · музыкальная драма · семейная сага</p>
-<p>Формат: 2 сезона × 12 серий × 45–55 минут</p>
-<p><em>«Там, где другие слышат музыку, он читает код.»</em></p>
-<p>Россия начала XX века. Князь-пианист с абсолютным слухом использует музыку как систему шифров, чтобы предотвратить международный заговор, и в ходе этой борьбы находит брата, наставника и новое понимание того, что культура может быть сильнее насилия.</p>
+  <!-- ═══ СЛАЙД 01 — КАМЕРТОН (обложка) ═══ -->
+  <section class="slide" id="s01" data-num="01">
+    <div class="slide-bg" style="background-image:url('slide-01.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">Камертон · Питч-дек · 2026</div>
+      <h1 class="slide-title">КАМЕРТОН</h1>
+      <div class="ornament" aria-hidden="true">
+        <span></span>
+        <svg viewBox="0 0 24 24">
+          <path d="M9 3C9 3 7 5 7 9C7 12.5 9 14 9 14L9 21" stroke-linecap="round"/>
+          <path d="M15 3C15 3 17 5 17 9C17 12.5 15 14 15 14L15 21" stroke-linecap="round"/>
+          <path d="M9 9L15 9" stroke-linecap="round"/>
+          <line x1="12" y1="14" x2="12" y2="21" stroke-linecap="round"/>
+        </svg>
+        <span></span>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-01.jpg" alt="КАМЕРТОН" loading="eager">
+      <div class="slide-body">
+        <p>Исторический шпионский триллер · Музыкальная драма · Семейная сага</p>
+        <p>Формат: 2 сезона × 12 серий × 45–55 минут</p>
+        <p><em>«Там, где другие слышат музыку, он читает код.»</em></p>
+        <p>Россия начала XX века. Князь-пианист с абсолютным слухом использует музыку как систему шифров, чтобы предотвратить международный заговор — и в ходе этой борьбы находит брата, наставника и новое понимание того, что культура может быть сильнее насилия.</p>
       </div>
-
+      <p class="slide-copy">© Каннингем Анна Грейс, проект «Камертон», 2026. Все права защищены.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 02 — Содержание
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-02">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Содержание</strong></p>
-<p>01</p>
-<p>Логлайн, жанр, тон</p>
-<p>02</p>
-<p>Мир и визуальный стиль</p>
-<p>03</p>
-<p>Уникальная ценность / Ключевая инновация</p>
-<p>04</p>
-<p>Главные персонажи</p>
-<p>05</p>
-<p>Авторское высказывание</p>
-<p>06</p>
-<p>Обзор сезона 1</p>
-<p>07</p>
-<p>Обзор сезона 2</p>
-<p>08</p>
-<p>Драматургия</p>
-<p>09</p>
-<p>Аудитория и сравнительные аналоги</p>
-<p>Команда и статус разработки</p>
-<p>Бюджет и финансирование</p>
-<p>Дистрибуция и стратегия</p>
-<p>Потребности проекта</p>
-<p>Правовой статус и права на проект</p>
+  <!-- ═══ СЛАЙД 02 — Содержание ═══ -->
+  <section class="slide light" id="s02" data-num="02">
+    <div class="slide-bg" style="background-image:url('slide-02.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">01</div>
+      <h2 class="slide-title">Содержание</h2>
+      <div class="slide-body">
+        <div class="toc-item"><span class="toc-num">01</span><span class="toc-label">Логлайн, жанр, тон</span></div>
+        <div class="toc-item"><span class="toc-num">02</span><span class="toc-label">Мир и визуальный стиль</span></div>
+        <div class="toc-item"><span class="toc-num">03</span><span class="toc-label">Уникальная ценность / Ключевая инновация</span></div>
+        <div class="toc-item"><span class="toc-num">04</span><span class="toc-label">Главные персонажи</span></div>
+        <div class="toc-item"><span class="toc-num">05</span><span class="toc-label">Авторское высказывание</span></div>
+        <div class="toc-item"><span class="toc-num">06</span><span class="toc-label">Обзор сезона 1</span></div>
+        <div class="toc-item"><span class="toc-num">07</span><span class="toc-label">Обзор сезона 2</span></div>
+        <div class="toc-item"><span class="toc-num">08</span><span class="toc-label">Драматургия</span></div>
+        <div class="toc-item"><span class="toc-num">09</span><span class="toc-label">Аудитория и аналоги</span></div>
+        <div class="toc-item"><span class="toc-num">10</span><span class="toc-label">Команда и статус разработки</span></div>
+        <div class="toc-item"><span class="toc-num">11</span><span class="toc-label">Бюджет и финансирование</span></div>
+        <div class="toc-item"><span class="toc-num">12</span><span class="toc-label">Дистрибуция и стратегия</span></div>
+        <div class="toc-item"><span class="toc-num">13</span><span class="toc-label">Потребности проекта</span></div>
+        <div class="toc-item"><span class="toc-num">14</span><span class="toc-label">Правовой статус</span></div>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-02.jpg" alt="Содержание" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 03 — Логлайн, жанр, тон
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-03">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Логлайн, жанр, тон</strong></p>
-<p>«Камертон» — премиальный исторический сериал о мире, где дипломатия, музыка и разведка существуют в одном пространстве. Это напряжённый и элегантный шпионский триллер с сильной семейной драмой, в котором музыкальный слух становится инструментом власти, памяти и выживания.</p>
-<p>Проект соединяет три зрительских входа: шпионскую интригу, эмоциональную семейную сагу и редкую музыкальную идентичность, которая делает его отличимым на международном рынке. Формат из двух сезонов по 12 серий отвечает тренду на более компактные премиальные драмы на международных рынках, а также укладывается в более управляемую модель для китайского регулирования и совместного производства, где исторически ориентиром был потолок в 40 серий, при рекомендации держаться ближе к 30.</p>
-<p>Россия, 1905–1907 годы. Князь Григорий Волконский — блестящий пианист, аристократ и тайный агент — под прикрытием музыкальных вечеров и салонной жизни выходит на международный заговор, способный изменить баланс сил между Россией, Китаем и Британской империей; используя музыкальные шифры и абсолютный слух, он вступает в опасную игру, которая приводит его к утраченной любви, названному брату и семейной тайне, меняющей всю его жизнь.</p>
-<p><strong>Формат</strong></p>
-<p>2 сезона по 12 серий.</p>
-<p>Хронометраж: 45–55 минут.</p>
-<p>Сезон 1: 1905–1907, с флэшбэками в 1900–1901.</p>
-<p>Сезон 2: 1911–1914.</p>
+  <!-- ═══ СЛАЙД 03 — Логлайн, жанр, тон ═══ -->
+  <section class="slide light" id="s03" data-num="03">
+    <div class="slide-bg" style="background-image:url('slide-03.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">02</div>
+      <h2 class="slide-title">Логлайн, жанр, тон</h2>
+      <div class="slide-body">
+        <p>«Камертон» — премиальный исторический сериал о мире, где дипломатия, музыка и разведка существуют в одном пространстве. Напряжённый и элегантный шпионский триллер с сильной семейной драмой, в котором музыкальный слух становится инструментом власти, памяти и выживания.</p>
+        <p>Россия, 1905–1907 годы. Князь Григорий Волконский — блестящий пианист, аристократ и тайный агент — под прикрытием музыкальных вечеров выходит на международный заговор, способный изменить баланс сил между Россией, Китаем и Британской империей.</p>
+        <p><strong>Формат:</strong> 2 сезона по 12 серий. Хронометраж: 45–55 минут.<br>
+        Сезон 1: 1905–1907, с флэшбэками в 1900–1901. Сезон 2: 1911–1914.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-03.jpg" alt="Логлайн, жанр, тон" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 04 — Мир и визуальный стиль
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-04">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Мир и визуальный стиль</strong></p>
-<p><strong>Мир</strong><strong> </strong><strong>сериала</strong></p>
-<p>«Камертон» разворачивается между Москвой, Петербургом, Шанхаем, Пекином и европейскими дипломатическими узлами начала XX века. Это мир салонов, железных дорог, консерваторий, посольств, гостиниц, закрытых переговоров и частных музыкальных вечеров, где культура не фон, а реальный инструмент влияния.</p>
-<p>Уникальность проекта в том, что музыкальный шифр здесь не декоративный образ, а драматургический механизм, через который герой действует, распознаёт угрозу и вступает в борьбу. Такое построение мира создаёт редкое сочетание шпионажа, наследия престижной драмы и культурного триллера.</p>
-<p><strong>Тон и визуальный стиль</strong></p>
-<p>Тон сериала — напряжённый, элегантный и интеллектуальный, с атмосферой моральной двусмысленности и эмоциональной страстности, где семейная драма переплетается со шпионской интригой и музыкой. История не строится на мраке как эстетике; напротив, её визуальный язык основан на мягком «молочном» свете, воздушной среде и приглушённой тёпло-холодной палитре, которая создаёт ощущение памяти, исторической дистанции и внутреннего напряжения без ухода в тяжёлый визуальный нуар.</p>
-<p>Камера тяготеет к крупным и средним планам, плавным движениям и интимному наблюдению за персонажами, позволяя политическому и шпионскому конфликту всегда оставаться личным. Это делает сериал одновременно доступным жанровой аудитории и привлекательным для зрителя престижной исторической драмы.</p>
+  <!-- ═══ СЛАЙД 04 — Мир и визуальный стиль ═══ -->
+  <section class="slide light" id="s04" data-num="04">
+    <div class="slide-bg" style="background-image:url('slide-04.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">03</div>
+      <h2 class="slide-title">Мир и визуальный стиль</h2>
+      <div class="slide-body">
+        <p><strong>Мир сериала</strong> — между Москвой, Петербургом, Шанхаем, Пекином и европейскими дипломатическими узлами начала XX века. Мир салонов, железных дорог, консерваторий, посольств и частных музыкальных вечеров, где культура не фон, а реальный инструмент влияния.</p>
+        <p><strong>Тон и визуальный стиль</strong> — напряжённый, элегантный, интеллектуальный. Мягкий «молочный» свет, воздушная среда, приглушённая тёпло-холодная палитра. Камера тяготеет к крупным и средним планам, плавным движениям и интимному наблюдению за персонажами.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-04.jpg" alt="Мир и визуальный стиль" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 05 — Уникальная ценность
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-05">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Уникальная ценность / Ключевая инновация</strong></p>
-<p><em>Что делает «Камертон» действительно отличимым</em><em>:</em></p>
-<ul>
-  <li>Шпионский триллер, в котором музыка — не украшение, а рабочая система кодирования и драматургического действия.</li>
-</ul>
-<ul>
-  <li>история с международной географией, где Россия и Китай связаны не экзотикой, а общей драматургией.</li>
-</ul>
-<ul>
-  <li>Главный герой — не военный и не сыщик, а музыкант с абсолютным слухом — новый тип протагониста в жанре шпионского триллера.</li>
-</ul>
-<ul>
-  <li>Сильная семейная сага внутри жанровой конструкции: братство, предательство, кровная тайна, утрата и личная цена миссии.</li>
-</ul>
-<ul>
-  <li>Потенциал кросс-культурного совместного производства благодаря русско-китайской оси истории и трёхъязычной среде проекта.</li>
-</ul>
+  <!-- ═══ СЛАЙД 05 — Уникальная ценность ═══ -->
+  <section class="slide" id="s05" data-num="05">
+    <div class="slide-bg" style="background-image:url('slide-05.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">04</div>
+      <h2 class="slide-title">Уникальная ценность<br>/ Ключевая инновация</h2>
+      <div class="slide-body">
+        <p><em>Что делает «Камертон» действительно отличимым:</em></p>
+        <ul>
+          <li>Шпионский триллер, в котором музыка — не украшение, а рабочая система кодирования и драматургического действия.</li>
+          <li>История с международной географией, где Россия и Китай связаны не экзотикой, а общей драматургией.</li>
+          <li>Главный герой — не военный и не сыщик, а музыкант с абсолютным слухом — новый тип протагониста в жанре.</li>
+          <li>Сильная семейная сага внутри жанровой конструкции: братство, предательство, кровная тайна, утрата и личная цена миссии.</li>
+          <li>Потенциал кросс-культурного совместного производства благодаря русско-китайской оси и трёхъязычной среде проекта.</li>
+        </ul>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-05.jpg" alt="Уникальная ценность" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 06 — Главные персонажи
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-06">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Главные персонажи</strong></p>
-<p><strong>Григорий Волконский</strong> — князь, пианист, агент. Блестящий, обаятельный, дисциплинированный изнутри, но эмоционально разорванный человек, который проходит путь от личной мотивации и внутренней мести к служению более высокой идее.</p>
-<p><strong>Михаил Михайлович Ипполитов-Иванов</strong> — один из тех редких людей, в ком масштаб личности уживался с абсолютной простотой. Первый выборный ректор консерватории, который в годы войн и революции не уехал, а остался, чтобы сохранить русскую музыкальную школу и дать миру новое поколение музыкантов. В его салоне, где встречаются шпионы и дипломаты, искусство становится не просто фоном, а единственной правдой. Первая симфония Ипполитова-Иванова становится не только художественной кульминацией сезона, но и носителем шифра, раскрывающего британский план.</p>
-<p><strong>Чэнь Цзымин</strong> — философ, отшельник, соученик Григория у даосского мастера и, как позже выяснится, его единокровный брат (у них общий отец — русский князь). Он соединяет восточную интеллектуальную традицию, внутреннюю силу и политическое пробуждение. Через него история получает не экзотический, а равноправный китайский центр тяжести: он не помощник русского героя, а второй главный герой, чья боль, выбор и жертва определяют судьбу Китая и связь двух культур.</p>
+  <!-- ═══ СЛАЙД 06 — Главные персонажи ═══ -->
+  <section class="slide light" id="s06" data-num="06">
+    <div class="slide-bg" style="background-image:url('slide-06.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">05</div>
+      <h2 class="slide-title">Главные персонажи</h2>
+      <div class="slide-body">
+        <p><strong>Григорий Волконский</strong> — князь, пианист, агент. Блестящий, обаятельный, дисциплинированный изнутри, но эмоционально разорванный человек, проходящий путь от личной мести к служению более высокой идее.</p>
+        <p><strong>Михаил Михайлович Ипполитов-Иванов</strong> — один из тех редких людей, в ком масштаб личности уживался с абсолютной простотой. Первый выборный ректор консерватории, который в годы войн и революции остался, чтобы сохранить русскую музыкальную школу. Его Первая симфония становится носителем шифра, раскрывающего британский план.</p>
+        <p><strong>Чэнь Цзымин</strong> — философ, отшельник, соученик Григория и, как позже выяснится, его единокровный брат. Не помощник русского героя, а второй главный герой, чья боль и жертва определяют судьбу Китая.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-06.jpg" alt="Главные персонажи" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 07 — Главные персонажи (продолжение)
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-07">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Главные персонажи (продолжение)</strong></p>
-<p><strong>Андрей Волконский</strong> — старший брат Григория, дипломат и фигура трагической репутации. Его линия строится на жертве, неверно прочитанной верности и семейной цене государственной службы.</p>
-<p><strong>Варвара Строганова</strong> — умная, сильная и эмоционально уязвимая фигура контрразведки, чья личная привязанность и профессиональная подозрительность ставят её на опасную границу между долгом и чувством.</p>
-<p><strong>Лоренс Хартман</strong> — британский агент и виолончелист, антагонист, способный противостоять герою не только силой, но и интеллектом, воспитанием и художественной утончённостью.</p>
-<p><strong>Юки Мураками</strong> — тройная агент, шпионка-музыкант с двойным происхождением (японка и русская). Она блестяще играет на фортепиано, свободно говорит на пяти языках и виртуозно плетёт интриги, одновременно работая на Японию, Британию и Россию. Однако в конечном счёте она верна только себе и своей идее — величию Японии, которая, по её убеждению, призвана «освободить Азию от западного гнёта».</p>
-<p>Во втором сезоне её роль трансформируется: она перестаёт быть просто лавирующей шпионкой и становится <strong>архитектором японского плана</strong> по захвату влияния в Китае. Её главная драма — искренняя вера в миссию своей страны, которая на деле оборачивается колониальной агрессией. Юки — не однозначный враг, а трагическая фигура, чья красота, интеллект и фанатизм делают её самым опасным и непредсказуемым персонажем проекта.</p>
-<p><em>Женские и международные линии: помимо центральной мужской дуги, в сериале важную роль играют женские персонажи, которые не обслуживают сюжет, а меняют его ход: Варвара Строганова, Юки Мураками, Сюй Лин и другие фигуры китайской и японской линии расширяют эмоциональную, политическую и жанровую фактуру истории. Это важно для презентационного набора, потому что проект не сводится к «мужскому историческому шпионскому действию»; у него есть чувственная, стратегическая и культурная многослойность, расширяющая аудиторию.</em></p>
+  <!-- ═══ СЛАЙД 07 — Главные персонажи (продолжение) ═══ -->
+  <section class="slide light" id="s07" data-num="07">
+    <div class="slide-bg" style="background-image:url('slide-07.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">05</div>
+      <h2 class="slide-title">Главные персонажи<br><em style="font-size:0.65em;opacity:0.7">(продолжение)</em></h2>
+      <div class="slide-body">
+        <p><strong>Андрей Волконский</strong> — старший брат Григория, дипломат и фигура трагической репутации. Его линия строится на жертве, неверно прочитанной верности и семейной цене государственной службы.</p>
+        <p><strong>Варвара Строганова</strong> — умная, сильная и эмоционально уязвимая фигура контрразведки, чья личная привязанность и профессиональная подозрительность ставят её на опасную границу между долгом и чувством.</p>
+        <p><strong>Лоренс Хартман</strong> — британский агент и виолончелист, антагонист, способный противостоять герою не только силой, но и интеллектом и художественной утончённостью.</p>
+        <p><strong>Юки Мураками</strong> — тройной агент, шпионка-музыкант с двойным происхождением (японка и русская), верная лишь своей идее величия Японии. Во втором сезоне становится архитектором японского плана в Китае — трагическая фигура, самый опасный персонаж проекта.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-07.jpg" alt="Главные персонажи (продолжение)" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 08 — Авторское высказывание
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-08">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Авторское высказывание</strong></p>
-<p>«Камертон» — это история о том, что культура может быть не украшением власти, а альтернативой насилию. В мире, который движется к войне, главный герой борется не оружием в привычном смысле, а слухом, памятью, музыкальной структурой и человеческой связью, и именно это делает проект эмоционально отличимым.</p>
-<p>Авторская позиция проекта не пропагандистская, а гуманистическая: показать, что между Западом и Востоком, между империей и личностью, между долгом и любовью возможен не только конфликт, но и диалог — пусть и трагически хрупкий.</p>
+  <!-- ═══ СЛАЙД 08 — Авторское высказывание ═══ -->
+  <section class="slide" id="s08" data-num="08">
+    <div class="slide-bg" style="background-image:url('slide-08.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">06</div>
+      <h2 class="slide-title">Авторское высказывание</h2>
+      <div class="slide-body">
+        <p>«Камертон» — это история о том, что культура может быть не украшением власти, а альтернативой насилию. В мире, который движется к войне, главный герой борется не оружием в привычном смысле, а слухом, памятью, музыкальной структурой и человеческой связью.</p>
+        <p>Авторская позиция проекта не пропагандистская, а гуманистическая: показать, что между Западом и Востоком, между империей и личностью, между долгом и любовью возможен не только конфликт, но и диалог — пусть и трагически хрупкий.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-08.jpg" alt="Авторское высказывание" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 09 — Обзор сезона 1
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-09">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Обзор сезона 1</strong></p>
-<p><strong>Сезон 1: «</strong><strong>Русский</strong><strong> </strong><strong>крест</strong><strong>» (1905–1908)</strong></p>
-<p><em>Тема сезона: рождение новой России на песке старого мира; "Первая симфония" Михаила Ипполитова-Иванова как голос надежды.</em></p>
-<p>В каждом эпизоде личная линия Григория связана с конкретным историческим событием и музыкальным мотивом: от возвращения из Китая и травмы утраченной любви к Сюй Линь до формирования уникального шпионского метода — музыкального шифра, встроенного в концерты и салонную жизнь. Сезон последовательно строит мир культурной дипломатии и разведки: встречи с Ипполитовым‑Ивановым, Ли Хунчжаном, Лян Цичао и Кан Ювэем связывают российскую, китайскую и британскую линии в единую интригу, где каждая серия сочетает политический поворот, шаг в семейной драме и музыкальную кульминацию.</p>
-<p>К середине сезона усиливается конфликт между братьями Волконскими и растёт подозрение Варвары, а британский агент‑виолончелист Лоренс Хартман становится персональным антагонистом Григория через музыкальные дуэли и зеркальную биографию.</p>
-<p>Финал первого сезона — исполнение первой симфонии, в которой зашит код, срывающий англо‑китайский заговор: внешняя победа достигается ценой личных потерь, Андрей публично остаётся с клеймом «предателя», Варвара эмоционально разрушена, но Григорий обретает брата в лице Чэнь Цзымина и новую веру в культуру как оружие.</p>
+  <!-- ═══ СЛАЙД 09 — Обзор сезона 1 ═══ -->
+  <section class="slide light" id="s09" data-num="09">
+    <div class="slide-bg" style="background-image:url('slide-09.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">07</div>
+      <h2 class="slide-title">Обзор сезона 1</h2>
+      <div class="slide-body">
+        <p><strong>Сезон 1: «Русский крест» (1905–1908)</strong></p>
+        <p><em>Тема: рождение новой России на песке старого мира; Первая симфония Ипполитова-Иванова как голос надежды.</em></p>
+        <p>В каждом эпизоде личная линия Григория связана с конкретным историческим событием и музыкальным мотивом. Сезон строит мир культурной дипломатии и разведки через встречи с Ипполитовым-Ивановым, Ли Хунчжаном, Лян Цичао.</p>
+        <p>Финал — исполнение первой симфонии, в которой зашит код, срывающий англо-китайский заговор: внешняя победа достигается ценой личных потерь, но Григорий обретает брата в лице Цзымина и новую веру в культуру как оружие.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-09.jpg" alt="Обзор сезона 1" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 10 — Обзор сезона 2
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-10">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Обзор сезона 2</strong></p>
-<p><strong>Сезон 2: «</strong><strong>Танго</strong><strong> </strong><strong>смерти</strong><strong>» (1911–1914)</strong></p>
-<p><em>Тема сезона: крушение империй, рождение новых идеологий; танго как форма страсти и предчувствия смерти.</em></p>
-<p>Второй сезон переносит центр тяжести в Китай и международные точки напряжения: на фоне Синьхайской революции, падения империи Цин и перераздела сфер влияния между Россией и Великобританией личные истории героев становятся частью глобального политического перелома. Цзымин проходит путь от даосского отшельника к человеку, который сознательно выбирает будущий коммунистический дискурс, читая «Манифест» и революционные тексты в переводах; Григорий оказывается между долгом, любовью и виной, а Варвара и Юки вносят в историю женскую перспективу власти, желания и жертвы.</p>
-<p>Музыка сменяет регистр: в саундтреке появляются танго, революционные песни, «Танго смерти» в исполнении Изы Кремер и траурные мотивы, в которых продолжается линия первой симфонии Михаила Ипполитова-Иванова. Сезон структурирован вокруг череды кульминаций — бал в Шанхае, музыкальный теракт, ранение и увечье Цзымина, раскрытие их кровного родства, гибель Николая, болезнь и смерть Андрея, уход Варвары со службы — которые параллельно показывают крушение частной вселенной героев и старого политического порядка.</p>
-<p>Финал — лето 1914 года, убийство эрцгерцога и прощание Григория и Цзымина в Харбине — превращает их личную историю в пролог к мировому конфликту. Эпилог 1929 года в Шанхае, где ученик входит в класс и видит портрет Григория, закрепляет идею: от мира остались руины, но музыка и связь между людьми пережили империи.</p>
+  <!-- ═══ СЛАЙД 10 — Обзор сезона 2 ═══ -->
+  <section class="slide light" id="s10" data-num="10">
+    <div class="slide-bg" style="background-image:url('slide-10.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">08</div>
+      <h2 class="slide-title">Обзор сезона 2</h2>
+      <div class="slide-body">
+        <p><strong>Сезон 2: «Танго смерти» (1911–1914)</strong></p>
+        <p><em>Тема: крушение империй, рождение новых идеологий; танго как форма страсти и предчувствия смерти.</em></p>
+        <p>Второй сезон переносит действие в Китай: на фоне Синьхайской революции и падения империи Цин личные истории героев становятся частью глобального перелома. Цзымин проходит путь от даосского отшельника к человеку, выбирающему революционный дискурс.</p>
+        <p>Финал — лето 1914 года, убийство эрцгерцога и прощание Григория и Цзымина в Харбине — превращает их личную историю в пролог к мировому конфликту. Эпилог 1929 года в Шанхае: музыка и связь между людьми пережили империи.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-10.jpg" alt="Обзор сезона 2" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 11 — Драматургия
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-11">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Драматургия</strong></p>
-<p>Каждая серия «Камертона» строится на пересечении четырёх линий: конкретного исторического события, личной развилки героев, музыкального кода и моральной дилеммы. В начале эпизода зритель получает чёткий исторический или политический контекст (революционные волнения, дипломатические переговоры, сдвиги в Китае или Европе), который запускает новое задание или угрозу для Григория и его окружения.</p>
-<p>Дальше политический импульс всегда проходит через личное: каждый эпизод развивает хотя бы одну ключевую арку — брата против брата, Варвара между долгом и чувствами, Цзымин между философией и революцией, Лоренс между искусством и шпионажем, — и ставит героев в ситуацию выбора, за который придётся платить.</p>
-<p>Музыка в каждой серии — не иллюстрация, а инструмент действия: концерт, дуэль, симфония или песня становятся местом передачи шифра, ловушкой, способом спасения или памятью о потере, и именно музыкальная сцена чаще всего служит кульминацией эпизода.</p>
-<p>Моральная дилемма завершает цикл: к концу серии герой всегда платит цену — нарушает правило, жертвует отношением, защищает страну ценой частной жизни или наоборот поддаётся человеческому чувству, осложняя игру на поле большой политики. В результате зритель из эпизода в эпизод получает узнаваемый, но каждый раз новый паттерн: исторический сдвиг → личный конфликт → музыкальный ход → этическое последствие, который удерживает напряжение на протяжении двух сезонов и делает сериал пригодным как для непрерывного просмотра, так и для еженедельного выпуска.</p>
+  <!-- ═══ СЛАЙД 11 — Драматургия ═══ -->
+  <section class="slide" id="s11" data-num="11">
+    <div class="slide-bg" style="background-image:url('slide-11.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">09</div>
+      <h2 class="slide-title">Драматургия</h2>
+      <div class="slide-body">
+        <p>Каждая серия строится на пересечении четырёх линий: конкретного исторического события, личной развилки героев, музыкального кода и моральной дилеммы.</p>
+        <p>Политический импульс всегда проходит через личное. Музыка в каждой серии — не иллюстрация, а инструмент действия: концерт, дуэль, симфония или песня становятся местом передачи шифра, ловушкой, способом спасения или памятью о потере.</p>
+        <p>К концу серии герой всегда платит цену — нарушает правило, жертвует отношением, защищает страну ценой частной жизни. Паттерн: <em>исторический сдвиг → личный конфликт → музыкальный ход → этическое последствие.</em></p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-11.jpg" alt="Драматургия" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 12 — Аудитория и сравнительные аналоги
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-12">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Аудитория и сравнительные аналоги</strong></p>
-<p><strong>Аудитория</strong></p>
-<p>Целевая аудитория проекта — зрители 25–55 лет, которые смотрят премиальные исторические драмы, шпионские триллеры, престижные международные сериалы и эмоционально насыщенные семейные саги. Ядро аудитории — зритель, которому важны атмосфера, интеллект, историческая фактура, сильные персонажи и многослойная интрига, а не только событийность.</p>
-<p>С точки зрения рынков проект имеет потенциал для России, Китая, Европы и Северной Америки, особенно в сегменте аудитории, открытой к неанглоязычным премиальным драмам. Для международной платформы это может быть упаковано как высококлассная историческая шпионская драма с кросс-культурной привлекательностью.</p>
-<p><strong>Сравнительные</strong><strong> </strong><strong>аналоги</strong></p>
-<p>Сериал находится на пересечении исторической шпионской драмы, престижной семейной саги и музыкального характерного триллера.</p>
-<p>Визуально и тонально проект опирается на атмосферную изысканность, мягкий контровой свет, чувственную пластику кадра и интеллектуальную драматургию. По эстетике, свету и визуальному ряду — Peaky Blinders (2013–2022, реж. Steven Knight, BBC / Caryn Mandabach Productions), по семейной теме и атмосфере. По драматургии — The Queen's Gambit (2020, реж. Scott Frank, Netflix) и Bridge of Spies (2015, реж. Steven Spielberg, DreamWorks / Amblin Entertainment). Из китайского контекста: The Disguiser / 伪装者 (2015, реж. Li Xue, Daylight Entertainment / Shandong Film &amp; TV Group, в гл. роли Ху Гэ) — исторический шпионский триллер с семейным центром тяжести и историей Шанхая в период оккупации; Blossoms Shanghai / 繁花 (2023–2024, реж. Wong Kar-wai, Shanghai Film Group / Tencent Video, в гл. роли Ху Гэ) — первый сериал Вонга Кар-Вая, задающий визуальный и эмоциональный стандарт для русско-китайской оси «Камертона».</p>
+  <!-- ═══ СЛАЙД 12 — Аудитория и аналоги ═══ -->
+  <section class="slide light" id="s12" data-num="12">
+    <div class="slide-bg" style="background-image:url('slide-12.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">10</div>
+      <h2 class="slide-title">Аудитория и сравнительные аналоги</h2>
+      <div class="slide-body">
+        <p><strong>Аудитория</strong> — зрители 25–55 лет, смотрящие премиальные исторические драмы, шпионские триллеры и эмоционально насыщенные семейные саги. Рынки: Россия, Китай, Европа, Северная Америка.</p>
+        <p><strong>Сравнительные аналоги:</strong></p>
+        <ul>
+          <li><em>Peaky Blinders</em> (2013–2022, реж. Steven Knight, BBC) — по эстетике, свету и семейной теме</li>
+          <li><em>The Queen's Gambit</em> (2020, реж. Scott Frank, Netflix) — по драматургии</li>
+          <li><em>Bridge of Spies</em> (2015, реж. Steven Spielberg, DreamWorks) — по шпионской атмосфере</li>
+          <li><em>The Disguiser / 伪装者</em> (2015, реж. Li Xue, Daylight Ent., в гл. роли Ху Гэ)</li>
+          <li><em>Blossoms Shanghai / 繁花</em> (2023–2024, реж. Wong Kar-wai, Shanghai Film Group, Ху Гэ)</li>
+        </ul>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-12.jpg" alt="Аудитория и сравнительные аналоги" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 13 — Команда и статус разработки
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-13">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Команда и статус разработки</strong></p>
-<p><strong>Статус разработки</strong></p>
-<p>Проект находится на стадии сценарной разработки и расширения пакета. На сегодня сформирована драматургическая основа двух сезонов, разработаны психологические портреты ключевых персонажей, прописана система музыкального шифра, лежащего в основе шпионской интриги.</p>
-<p>Для достижения максимальной исторической и музыкальной достоверности проект изначально ориентирован на сотрудничество с профильными культурными институциями. Именно поэтому ведутся переговоры о формах взаимодействия с <strong>Фондом «Русское исполнительское искусство»</strong> и <strong>Институтом имени М.М. Ипполитова-Иванова</strong> — как с естественными хранителями памяти и наследия Маэстро. Мы открыты к любой модели участия, которую эти институции сочтут для себя органичной: от экспертных консультаций до официального партнёрства.</p>
-<p>На следующем этапе ключевыми задачами являются:</p>
-<ul>
-  <li>завершение пакета пилотной серии и сценарной библии;</li>
-  <li>формирование продюсерского контура и привлечение режиссёра;</li>
-  <li>фиксация консультантов по исторической и музыкальной части;</li>
-  <li>развитие международной рамки для российско-китайского совместного производства.</li>
-</ul>
-<p><strong>Команда и партнёры</strong></p>
-<p>Автор идеи / креативный продюсер: Каннингем Анна Грейс</p>
-<p>Режиссёр: обсуждается</p>
-<p>Сценарий: в разработке</p>
-<p>Культурные партнёры (в стадии обсуждения):</p>
-<ul>
-  <li>Фонд «Русское исполнительское искусство»</li>
-  <li>Институт имени М.М. Ипполитова-Иванова</li>
-  <li>Потенциальный китайский производственный партнёр: обсуждается</li>
-</ul>
+  <!-- ═══ СЛАЙД 13 — Команда и статус ═══ -->
+  <section class="slide light" id="s13" data-num="13">
+    <div class="slide-bg" style="background-image:url('slide-13.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">11</div>
+      <h2 class="slide-title">Команда и статус разработки</h2>
+      <div class="slide-body">
+        <p>Сформирована драматургическая основа двух сезонов, разработаны психологические портреты персонажей, прописана система музыкального шифра.</p>
+        <p>Ведутся переговоры с <strong>Фондом «Русское исполнительское искусство»</strong> и <strong>Институтом имени М.М. Ипполитова-Иванова</strong> о формах участия — от экспертных консультаций до официального партнёрства.</p>
+        <p><strong>Команда:</strong> Автор / креативный продюсер: Каннингем Анна Грейс · Режиссёр: обсуждается · Сценарий: в разработке · Китайский производственный партнёр: обсуждается</p>
+        <p><strong>Следующий этап:</strong> завершение пакета пилотной серии и сценарной библии, формирование продюсерского контура, международная рамка для российско-китайского копродакшн.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-13.jpg" alt="Команда и статус разработки" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 14 — Бюджет и финансирование
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-14">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Бюджет и финансирование</strong></p>
-<p>Ориентировочный бюджетный диапазон: 10–15 млн долларов США за 24 серии при условии дальнейшего пакетирования, оценки производственного дизайна, структуры совместного производства и моделирования затрат по конкретным территориям.</p>
-<p><strong>Потенциальная финансовая модель</strong></p>
-<ul>
-  <li>совместное производство Россия–Китай;</li>
-  <li>частные инвестиции;</li>
-  <li>предварительная продажа;</li>
-  <li>культурные фонды и институциональная поддержка;</li>
-  <li>выборочные брендовые партнёрства, если они не нарушают историческую органику проекта.</li>
-</ul>
+  <!-- ═══ СЛАЙД 14 — Бюджет и финансирование ═══ -->
+  <section class="slide" id="s14" data-num="14">
+    <div class="slide-bg" style="background-image:url('slide-14.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">12</div>
+      <h2 class="slide-title">Бюджет и финансирование</h2>
+      <div class="slide-body">
+        <p>Ориентировочный бюджетный диапазон: <strong>10–15 млн долларов США</strong> за 24 серии при условии дальнейшего пакетирования и структуры совместного производства.</p>
+        <p><strong>Потенциальная финансовая модель:</strong></p>
+        <ul>
+          <li>совместное производство Россия–Китай</li>
+          <li>частные инвестиции</li>
+          <li>предварительная продажа</li>
+          <li>культурные фонды и институциональная поддержка</li>
+          <li>выборочные брендовые партнёрства, если они не нарушают историческую органику проекта</li>
+        </ul>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-14.jpg" alt="Бюджет и финансирование" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 15 — Дистрибуция и стратегия
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-15">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Дистрибуция и стратегия</strong></p>
-<p>Дистрибуционная цель: премиальный международный стриминговый сервис, крупные региональные платформы и рыночное освещение через фестивали.</p>
-<p>Почему сейчас: Сегодня международный рынок особенно открыт к неанглоязычным премиальным драмам, историческим сериалам и кросс-культурным историям с высокой идентичностью, если у них есть ясный крючок и производственная ценность. «Камертон» соответствует этой логике, потому что предлагает не просто историческую реконструкцию, а самобытный формат, где музыка, разведка и семейная трагедия соединены в один легко описываемый концепт.</p>
+  <!-- ═══ СЛАЙД 15 — Дистрибуция и стратегия ═══ -->
+  <section class="slide light" id="s15" data-num="15">
+    <div class="slide-bg" style="background-image:url('slide-15.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">13</div>
+      <h2 class="slide-title">Дистрибуция и стратегия</h2>
+      <div class="slide-body">
+        <p><strong>Цель:</strong> премиальный международный стриминговый сервис, крупные региональные платформы и рыночное освещение через фестивали.</p>
+        <p><strong>Почему сейчас:</strong> международный рынок особенно открыт к неанглоязычным премиальным драмам, историческим сериалам и кросс-культурным историям с высокой идентичностью. «Камертон» предлагает не просто историческую реконструкцию, а самобытный формат, где музыка, разведка и семейная трагедия соединены в один легко описываемый концепт.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-15.jpg" alt="Дистрибуция и стратегия" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 16 — Потребности проекта
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-light" id="slide-16">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Потребности проекта</strong></p>
-<p><em>Сейчас проект ищет</em><em>:</em></p>
-<p>Исполнительного продюсера с опытом российско-китайских копродукций для производственного менеджмента, бюджетирования и юридической структуры.</p>
-<p>Китайского сопродюсера для совместного производства и локализации (не дистрибьютора).</p>
-<p>Консультантов по музыкальной и исторической экспертизе.</p>
+  <!-- ═══ СЛАЙД 16 — Потребности проекта ═══ -->
+  <section class="slide light" id="s16" data-num="16">
+    <div class="slide-bg" style="background-image:url('slide-16.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">14</div>
+      <h2 class="slide-title">Потребности проекта</h2>
+      <div class="slide-body">
+        <p><em>Сейчас проект ищет:</em></p>
+        <ul>
+          <li><strong>Исполнительного продюсера</strong> с опытом российско-китайских копродукций для производственного менеджмента, бюджетирования и юридической структуры.</li>
+          <li><strong>Китайского сопродюсера</strong> для совместного производства и локализации (не дистрибьютора).</li>
+          <li><strong>Консультантов</strong> по музыкальной и исторической экспертизе.</li>
+        </ul>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-16.jpg" alt="Потребности проекта" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Проект «Камертон». Использование материалов только с согласия правообладателя.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-  <!-- ═══════════════════════════════════════════════════════════════════
-       СЛАЙД 17 — Правовой статус и права на проект
-       ─────────────────────────────────────────────────────────────────
-       Чтобы изменить текст: редактируйте HTML ниже
-       Чтобы заменить картинку: измените src="..." в теге <img>
-  ═══════════════════════════════════════════════════════════════════ -->
-  <section class="slide slide-dark" id="slide-17">
-    <div class="slide-inner">
-
-      <!-- ТЕКСТ СЛАЙДА — редактируйте свободно -->
-      <div class="slide-text">
-<p><strong>Правовой статус и права на проект</strong></p>
-<p>Проект «Камертон» является оригинальным авторским произведением, включающим сюжет, персонажей, мир, композицию сезонов, а также уникальную концепцию музыкального шифра как драматургического инструмента.</p>
-<p>Исключительные права на литературную основу, концепцию сериала, разработанные материалы питч-дека, синопсисы сезонов и описание персонажей принадлежат Каннингем Анне Грейс. Любое использование, переработка, развитие, адаптация, экранизация и публичное представление материалов проекта допускается только на основании письменного договора с правообладателем.</p>
-<p>Настоящая презентация предоставляется адресно потенциальным партнёрам и инвесторам исключительно с целью ознакомления и не может рассматриваться как публичная оферта или отказ от авторских прав. Передача документа третьим лицам допускается только с согласия правообладателя.</p>
+  <!-- ═══ СЛАЙД 17 — Правовой статус ═══ -->
+  <section class="slide" id="s17" data-num="17">
+    <div class="slide-bg" style="background-image:url('slide-17.jpg')"></div>
+    <div class="slide-content">
+      <div class="slide-num">15</div>
+      <h2 class="slide-title">Правовой статус и права на проект</h2>
+      <div class="slide-body">
+        <p>Проект «Камертон» является оригинальным авторским произведением, включающим сюжет, персонажей, мир, композицию сезонов и уникальную концепцию музыкального шифра как драматургического инструмента.</p>
+        <p>Исключительные права на литературную основу, концепцию сериала и все разработанные материалы принадлежат <strong>Каннингем Анне Грейс</strong>. Любое использование допускается только на основании письменного договора с правообладателем.</p>
+        <p>Настоящая презентация предоставляется адресно потенциальным партнёрам и инвесторам исключительно с целью ознакомления и не может рассматриваться как публичная оферта.</p>
       </div>
-
-      <!-- ИЗОБРАЖЕНИЕ СЛАЙДА — замените src на нужный файл -->
-      <div class="slide-image">
-        <img src="slide-17.jpg" alt="Правовой статус и права на проект" loading="lazy">
-      </div>
-
+      <p class="slide-copy">© Каннингем Анна Грейс, проект «Камертон», 2026. Все права защищены.</p>
     </div>
   </section>
-  <div class="divider" aria-hidden="true"></div>
 
-</main>
+</div><!-- /deck -->
 
-<!-- ══ ФУТЕР ══════════════════════════════════════════════════════════════ -->
-<footer id="site-footer">
-  <div class="footer-line" aria-hidden="true">
-    <div class="footer-rule"></div>
-    <div class="footer-title">КАМЕРТОН</div>
-    <div class="footer-rule"></div>
-  </div>
-  <p class="footer-copy">© Каннингем Анна Грейс · Проект «Камертон» · 2026</p>
-</footer>
-
-<!-- ══ АУДИО ══════════════════════════════════════════════════════════════ -->
+<!-- ══ Аудио ══ -->
 <audio id="aud" loop preload="auto">
   <source src="https://github.com/secretgrace/kamerton/releases/download/v1.0/symphony.mp3" type="audio/mpeg">
 </audio>
 
-<!-- ══ ПЛЕЕР МУЗЫКИ ════════════════════════════════════════════════════════ -->
+<!-- ══ Плеер ══ -->
 <div id="music-player">
   <button id="mp-play" aria-label="Воспроизвести / Пауза">
     <svg id="ico-play"  viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
@@ -903,12 +660,48 @@
   </div>
 </div>
 
-<button id="top-btn" aria-label="Вернуться наверх">
-  <svg viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
-</button>
-
 <script>
-/* ── Аудио ── */
+const slides    = Array.from(document.querySelectorAll('.slide'));
+const counter   = document.getElementById('slide-counter');
+const progress  = document.getElementById('progress');
+const hint      = document.getElementById('scroll-hint');
+const deck      = document.getElementById('deck');
+const total     = slides.length;
+
+let currentIdx = 0;
+
+/* ── Intersection observer — fade-in + ken burns ── */
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      const idx = slides.indexOf(e.target);
+      currentIdx = idx;
+      const n = String(idx + 1).padStart(2, '0');
+      counter.textContent = n + ' / ' + String(total).padStart(2, '0');
+      progress.style.width = ((idx / (total - 1)) * 100) + '%';
+      if (idx > 0) hint.classList.add('hidden');
+    }
+  });
+}, { root: deck, threshold: 0.5 });
+
+slides.forEach(s => io.observe(s));
+
+/* ── Keyboard navigation ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+    e.preventDefault();
+    const next = slides[currentIdx + 1];
+    if (next) next.scrollIntoView({ behavior: 'smooth' });
+  }
+  if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    const prev = slides[currentIdx - 1];
+    if (prev) prev.scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+/* ── Audio ── */
 const aud = document.getElementById('aud');
 aud.volume = 0.55;
 let playing = false, muted = false;
@@ -919,7 +712,6 @@ function startMusic() {
 }
 window.addEventListener('load', startMusic);
 startMusic();
-
 ['click','scroll','keydown','touchstart'].forEach(ev =>
   document.addEventListener(ev, () => startMusic(), { passive: true, once: true })
 );
@@ -929,15 +721,13 @@ function syncPlayUI() {
   document.getElementById('ico-play').style.display  = p ? 'none' : '';
   document.getElementById('ico-pause').style.display = p ? '' : 'none';
 }
-
 document.getElementById('mp-play').addEventListener('click', e => {
   e.stopPropagation();
   aud.paused
     ? aud.play().then(() => { playing = true; syncPlayUI(); })
     : (aud.pause(), syncPlayUI());
 });
-
-aud.addEventListener('play', syncPlayUI);
+aud.addEventListener('play',  syncPlayUI);
 aud.addEventListener('pause', syncPlayUI);
 
 const volEl = document.getElementById('mp-vol');
@@ -946,41 +736,15 @@ volEl.addEventListener('input', e => {
   aud.volume = parseFloat(volEl.value);
   if (muted && aud.volume > 0) { muted = false; aud.muted = false; syncMuteUI(); }
 });
-
 document.getElementById('mp-mute').addEventListener('click', e => {
   e.stopPropagation();
   muted = !muted; aud.muted = muted; syncMuteUI();
   if (!playing) startMusic();
 });
-
 function syncMuteUI() {
   document.getElementById('mp-waves').style.display     = muted ? 'none' : '';
   document.getElementById('mp-muted-ico').style.display = muted ? '' : 'none';
 }
-
-/* ── Прогресс прокрутки ── */
-const scrollLine = document.getElementById('scroll-line');
-const topBtn     = document.getElementById('top-btn');
-
-window.addEventListener('scroll', () => {
-  const s = window.scrollY;
-  const d = document.documentElement.scrollHeight - window.innerHeight;
-  scrollLine.style.width = (d > 0 ? (s / d) * 100 : 0) + '%';
-  topBtn.classList.toggle('visible', s > window.innerHeight * 0.6);
-}, { passive: true });
-
-topBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-/* ── Fade-in при прокрутке ── */
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-}, { rootMargin: '0px 0px -60px 0px', threshold: 0.04 });
-document.querySelectorAll('.slide').forEach(s => observer.observe(s));
-
-/* ── Скрыть подсказку прокрутки ── */
-const hint = document.querySelector('.scroll-hint');
-window.addEventListener('scroll', () => { if (hint && window.scrollY > 80) hint.style.opacity = '0'; }, { passive: true, once: true });
 </script>
-
 </body>
 </html>
