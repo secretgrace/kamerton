@@ -26,7 +26,6 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── Scroll container ── */
     #deck {
       width: 100%; height: 100vh;
       overflow-y: scroll;
@@ -35,7 +34,6 @@
     }
     #deck::-webkit-scrollbar { display: none; }
 
-    /* ── Each slide ── */
     .slide {
       width: 100%; height: 100vh;
       scroll-snap-align: start;
@@ -46,7 +44,6 @@
       overflow: hidden;
     }
 
-    /* Background image — full bleed */
     .slide-bg {
       position: absolute;
       inset: 0;
@@ -58,7 +55,6 @@
     }
     .slide.visible .slide-bg { transform: scale(1.0); }
 
-    /* Gradient overlay — bottom-up */
     .slide::after {
       content: '';
       position: absolute;
@@ -74,7 +70,6 @@
       z-index: 1;
     }
 
-    /* Light slides — reverse gradient (top-down, cream) */
     .slide.light::after {
       background: linear-gradient(
         to bottom,
@@ -85,7 +80,6 @@
       );
     }
 
-    /* Text panel */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -99,15 +93,9 @@
     }
     .slide.visible .slide-content { opacity: 1; transform: none; }
 
-    /* Light slides — content at top */
-    .slide.light {
-      align-items: flex-start;
-    }
-    .slide.light .slide-content {
-      padding: 5vh 6vw 0;
-    }
+    .slide.light { align-items: flex-start; }
+    .slide.light .slide-content { padding: 5vh 6vw 0; }
 
-    /* Slide number */
     .slide-num {
       font-size: 9px;
       letter-spacing: 0.45em;
@@ -125,7 +113,6 @@
       background: var(--brass); opacity: 0.4;
     }
 
-    /* Title */
     .slide-title {
       font-family: var(--font-serif);
       font-weight: 300;
@@ -142,7 +129,6 @@
       color: #1a1512;
     }
 
-    /* Body text */
     .slide-body {
       font-weight: 300;
       font-size: clamp(11px, 1.1vw, 14px);
@@ -164,7 +150,6 @@
       font-size: 1.05em;
     }
 
-    /* Copyright line */
     .slide-copy {
       margin-top: 14px;
       font-size: 7px;
@@ -177,9 +162,9 @@
     .slide:not(.light) .slide-copy { color: rgba(176,168,152,0.38); }
     .slide.light       .slide-copy { color: rgba(90,80,68,0.35); }
 
-    /* ── Cover slide (01) special treatment ── */
+    /* Cover slide */
+    #s01 { align-items: center; }
     #s01 .slide-content {
-      align-items: center;
       text-align: center;
       padding-bottom: 8vh;
     }
@@ -212,7 +197,7 @@
       opacity: 0.45; stroke-width: 1;
     }
 
-    /* ── Contents slide (02) ── */
+    /* Contents slide */
     #s02 .slide-body {
       columns: 2; column-gap: 40px;
       max-width: 560px;
@@ -231,7 +216,6 @@
       color: rgba(215,200,175,0.78);
     }
 
-    /* ── Slide counter (bottom right) ── */
     #slide-counter {
       position: fixed;
       bottom: 28px; right: 32px;
@@ -241,7 +225,6 @@
       pointer-events: none;
     }
 
-    /* ── Progress bar ── */
     #progress {
       position: fixed;
       left: 0; top: 0;
@@ -251,7 +234,6 @@
       transition: width 0.12s linear;
     }
 
-    /* ── Music player ── */
     #music-player {
       position: fixed; top: 22px; right: 26px; z-index: 300;
       display: flex; align-items: center; gap: 9px;
@@ -284,7 +266,6 @@
     .mp-label span { font-size: 7.5px; letter-spacing: 0.1em; color: rgba(168,140,96,0.42); white-space: nowrap; line-height: 1.5; }
     .mp-label span:first-child { color: rgba(200,180,140,0.52); }
 
-    /* ── Scroll hint ── */
     #scroll-hint {
       position: fixed;
       bottom: 28px; left: 50%; transform: translateX(-50%);
@@ -302,7 +283,6 @@
       50%      { transform: translateX(-50%) translateY(5px); }
     }
 
-    /* ── Mobile ── */
     @media (max-width: 768px) {
       .slide-content { padding: 0 5vw 6vh; }
       .slide.light .slide-content { padding: 6vh 5vw 0; }
@@ -632,12 +612,10 @@
 
 </div><!-- /deck -->
 
-<!-- ══ Аудио ══ -->
 <audio id="aud" loop preload="auto">
   <source src="https://github.com/secretgrace/kamerton/releases/download/v1.0/symphony.mp3" type="audio/mpeg">
 </audio>
 
-<!-- ══ Плеер ══ -->
 <div id="music-player">
   <button id="mp-play" aria-label="Воспроизвести / Пауза">
     <svg id="ico-play"  viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21"/></svg>
@@ -667,33 +645,33 @@
 </div>
 
 <script>
-const slides    = Array.from(document.querySelectorAll('.slide'));
-const counter   = document.getElementById('slide-counter');
-const progress  = document.getElementById('progress');
-const hint      = document.getElementById('scroll-hint');
-const deck      = document.getElementById('deck');
-const total     = slides.length;
-
+const slides   = Array.from(document.querySelectorAll('.slide'));
+const counter  = document.getElementById('slide-counter');
+const progress = document.getElementById('progress');
+const hint     = document.getElementById('scroll-hint');
+const deck     = document.getElementById('deck');
+const total    = slides.length;
 let currentIdx = 0;
 
-/* ── Intersection observer — fade-in + ken burns ── */
+/* Наблюдатель: добавляем visible при входе, убираем при выходе */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
       e.target.classList.add('visible');
       const idx = slides.indexOf(e.target);
       currentIdx = idx;
-      const n = String(idx + 1).padStart(2, '0');
-      counter.textContent = n + ' / ' + String(total).padStart(2, '0');
+      counter.textContent = String(idx + 1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
       progress.style.width = ((idx / (total - 1)) * 100) + '%';
       if (idx > 0) hint.classList.add('hidden');
+    } else {
+      e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.5 });
+}, { root: deck, threshold: 0.55 });
 
 slides.forEach(s => io.observe(s));
 
-/* ── Keyboard navigation ── */
+/* Клавиатурная навигация */
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
     e.preventDefault();
@@ -707,7 +685,7 @@ document.addEventListener('keydown', e => {
   }
 });
 
-/* ── Audio ── */
+/* Аудио */
 const aud = document.getElementById('aud');
 aud.volume = 0.55;
 let playing = false, muted = false;
