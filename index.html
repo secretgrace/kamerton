@@ -42,11 +42,16 @@
       display: flex;
       align-items: flex-end;
       overflow: hidden;
+      /* FIX: каждый слайд получает свой изолированный stacking context —
+         контент предыдущего слайда больше не просвечивает через фон следующего */
+      isolation: isolate;
     }
 
     .slide-bg {
       position: absolute;
       inset: 0;
+      /* FIX: явно прибиваем фон к нижнему слою внутри изолированного контекста */
+      z-index: 0;
       background-size: cover;
       background-position: center center;
       background-repeat: no-repeat;
@@ -653,7 +658,10 @@ const deck     = document.getElementById('deck');
 const total    = slides.length;
 let currentIdx = 0;
 
-/* Наблюдатель: добавляем visible при входе, убираем при выходе */
+/* Наблюдатель: добавляем visible при входе, убираем при выходе.
+   FIX: threshold повышен до 0.6 — слайд получает класс visible
+   только когда занимает 60% вьюпорта, исключая срабатывание
+   при промежуточных позициях скролла между двумя слайдами. */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
@@ -667,7 +675,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.55 });
+}, { root: deck, threshold: 0.6 });
 
 slides.forEach(s => io.observe(s));
 
