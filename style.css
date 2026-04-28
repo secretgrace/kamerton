@@ -519,14 +519,16 @@ body::before {
   grid-column: 1 / -1;
   margin-top: 2px;
   min-width: 0;
-  display: grid;
-  gap: 1px;
-  color: var(--color-text-muted);
+  display: block;
+  color: var(--color-text);
   font-size: var(--text-xs);
   letter-spacing: 0.06em;
   line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;   /* центрирует текст по плееру */
 }
-
 .player-label strong,
 .player-status {
   color: var(--color-text);
