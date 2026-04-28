@@ -5,258 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>КАМЕРТОН — веб-презентация</title>
   <meta name="description" content="Веб-презентация проекта «Камертон»: исторический шпионский триллер, музыкальная драма и семейная сага.">
+  <meta name="theme-color" content="#110d0a">
+  <meta property="og:title" content="КАМЕРТОН — веб-презентация">
+  <meta property="og:description" content="Исторический шпионский триллер · музыкальная драма · семейная сага">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="./assets/slides/slide-01.jpg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    :root {
-      --font-display: "Cormorant Garamond", serif;
-      --font-body: "Jost", system-ui, sans-serif;
-      --color-bg: #110d0a;
-      --color-surface: rgba(16, 11, 7, 0.84);
-      --color-border: rgba(196, 162, 101, 0.3);
-      --color-text: #e7ddcc;
-      --color-text-muted: #ad9f8b;
-      --color-accent: #c4a265;
-    }
-
-    [data-theme="light"] {
-      --color-bg: #efe7dc;
-      --color-text: #2a2119;
-      --color-text-muted: #675848;
-      --color-accent: #8c6a32;
-    }
-
-    body {
-      font-family: var(--font-body);
-      background: var(--color-bg);
-      color: var(--color-text);
-      line-height: 1.6;
-      padding-bottom: 100px;
-    }
-
-    .progress {
-      position: fixed;
-      top: 0;
-      left: 0;
-      height: 2px;
-      background: var(--color-accent);
-      width: 0%;
-      z-index: 1000;
-    }
-
-    .topbar {
-      position: sticky;
-      top: 16px;
-      background: var(--color-surface);
-      backdrop-filter: blur(12px);
-      border-radius: 60px;
-      width: 90%;
-      max-width: 1400px;
-      margin: 16px auto;
-      padding: 8px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--color-border);
-      z-index: 100;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      text-decoration: none;
-      color: var(--color-text);
-    }
-
-    .brand-mark {
-      width: 32px;
-      height: 32px;
-    }
-
-    .slide-nav {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .slide-link {
-      color: var(--color-text-muted);
-      text-decoration: none;
-      padding: 6px 12px;
-      border-radius: 30px;
-      font-size: 14px;
-    }
-
-    .slide-link.is-active {
-      color: var(--color-accent);
-      background: rgba(196, 162, 101, 0.15);
-    }
-
-    .icon-button {
-      background: none;
-      border: none;
-      cursor: pointer;
-      padding: 8px;
-      border-radius: 50%;
-      color: var(--color-text);
-    }
-
-    .page {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 0 20px;
-    }
-
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      padding: 60px 0;
-      align-items: center;
-    }
-
-    .hero h1 {
-      font-family: var(--font-display);
-      font-size: 64px;
-      margin: 20px 0;
-    }
-
-    .kicker {
-      color: var(--color-accent);
-      text-transform: uppercase;
-      letter-spacing: 4px;
-      font-size: 14px;
-    }
-
-    .button {
-      display: inline-block;
-      padding: 12px 28px;
-      border-radius: 40px;
-      text-decoration: none;
-      margin-top: 20px;
-    }
-
-    .button-primary {
-      background: var(--color-accent);
-      color: #110d0a;
-    }
-
-    .preview-card img, .slide-frame img {
-      width: 100%;
-      border-radius: 24px;
-      border: 1px solid var(--color-border);
-    }
-
-    .slides {
-      display: flex;
-      flex-direction: column;
-      gap: 60px;
-      margin-top: 60px;
-    }
-
-    .deck-slide {
-      opacity: 0;
-      transform: translateY(30px);
-      transition: all 0.6s ease;
-    }
-
-    .deck-slide.is-visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .slide-caption {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 12px;
-      color: var(--color-text-muted);
-      font-size: 14px;
-    }
-
-    .back-to-top {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      opacity: 0;
-      transition: opacity 0.3s;
-      cursor: pointer;
-      background: var(--color-surface);
-      border: 1px solid var(--color-border);
-      border-radius: 40px;
-      padding: 12px 16px;
-      font-size: 18px;
-    }
-
-    .back-to-top.is-visible {
-      opacity: 1;
-    }
-
-    .player {
-      position: fixed;
-      bottom: 20px;
-      left: 20px;
-      background: var(--color-surface);
-      backdrop-filter: blur(12px);
-      padding: 8px 16px;
-      border-radius: 40px;
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      border: 1px solid var(--color-border);
-    }
-
-    .player-play {
-      background: none;
-      border: none;
-      cursor: pointer;
-      color: var(--color-accent);
-      font-size: 20px;
-    }
-
-    .player-label {
-      font-size: 12px;
-      color: var(--color-text-muted);
-    }
-
-    .site-footer {
-      text-align: center;
-      padding: 40px 20px;
-      color: var(--color-text-muted);
-      font-size: 12px;
-    }
-
-    @media (max-width: 768px) {
-      .hero {
-        grid-template-columns: 1fr;
-      }
-      .hero h1 {
-        font-size: 40px;
-      }
-      .slide-nav {
-        display: none;
-      }
-    }
-  </style>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./base.css">
+  <link rel="stylesheet" href="./style.css">
+  <script src="./app.js" defer></script>
 </head>
 <body>
-  <div class="progress" id="progress"></div>
+  <a class="skip-link" href="#slides">Перейти к слайдам</a>
+  <div class="progress" id="progress" aria-hidden="true"></div>
 
-  <nav class="topbar">
-    <a class="brand" href="#top">
-      <svg class="brand-mark" viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M24 5v38M15 8c0 6 4 10 9 10s9-4 9-10M18 31h12M14 38h20"/>
+  <nav class="topbar" aria-label="Навигация по веб-презентации">
+    <a class="brand" href="#top" aria-label="К началу презентации">
+      <svg class="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
+        <path d="M24 5v38" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M15 8c0 6 4 10 9 10s9-4 9-10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M18 31h12M14 38h20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>
       </svg>
-      <span class="brand-text">Камертон</span>
+      <span class="brand-text">
+        <span class="brand-title">Камертон</span>
+        <span class="brand-subtitle">Pitch deck</span>
+      </span>
     </a>
-    <div class="slide-nav">
+
+    <div class="slide-nav" aria-label="Переход к слайдам">
       <a class="slide-link" href="#slide-01">01</a>
       <a class="slide-link" href="#slide-02">02</a>
       <a class="slide-link" href="#slide-03">03</a>
@@ -275,164 +54,151 @@
       <a class="slide-link" href="#slide-16">16</a>
       <a class="slide-link" href="#slide-17">17</a>
     </div>
+
     <div class="topbar-actions">
-      <button class="icon-button" data-theme-toggle aria-label="Тема">🌙</button>
+      <button class="icon-button" type="button" data-theme-toggle aria-label="Переключить тему"></button>
     </div>
   </nav>
 
   <main class="page" id="top">
     <header class="hero">
-      <div class="hero-copy">
-        <p class="kicker">Web presentation · Pitch deck</p>
-        <h1>Камертон</h1>
-        <p>Исторический шпионский триллер · музыкальная драма · семейная сага</p>
-        <div class="hero-note">
-          <p><strong>Формат:</strong> 2 сезона × 12 серий × 45–55 минут</p>
-          <p>«Там, где другие слышат музыку, он читает код»</p>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="kicker">Web presentation · Pitch deck</p>
+          <h1>Камертон</h1>
+          <p class="hero-lede">Исторический шпионский триллер · музыкальная драма · семейная сага</p>
+          <div class="hero-note">
+            <p><strong>Формат:</strong> 2 сезона × 12 серий × 45–55 минут.</p>
+            <p>«Там, где другие слышат музыку, он читает код».</p>
+          </div>
+          <div class="hero-actions">
+            <a class="button button-primary" href="#slide-01">Смотреть презентацию</a>
+            <a class="button button-secondary" href="#slide-02">Открыть содержание</a>
+          </div>
         </div>
-        <a class="button button-primary" href="#slide-01">Смотреть презентацию</a>
+        <figure class="hero-preview" aria-label="Обложка презентации">
+          <div class="preview-card">
+            <img src="./assets/slides/slide-01.jpg" alt="Обложка презентации «Камертон»" width="1440" height="900" decoding="async">
+          </div>
+        </figure>
       </div>
-      <figure class="hero-preview">
-        <img src="./assets/slides/slide-01.jpg" alt="Камертон" width="1440" height="900">
-      </figure>
     </header>
 
-    <section class="slides" id="slides">
-      <article class="deck-slide" id="slide-01"><div class="slide-caption"><span>01</span><span>Обложка</span></div><figure class="slide-frame"><img src="./assets/slides/slide-01.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-02"><div class="slide-caption"><span>02</span><span>Содержание</span></div><figure class="slide-frame"><img src="./assets/slides/slide-02.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-03"><div class="slide-caption"><span>03</span><span>Логлайн</span></div><figure class="slide-frame"><img src="./assets/slides/slide-03.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-04"><div class="slide-caption"><span>04</span><span>Мир и стиль</span></div><figure class="slide-frame"><img src="./assets/slides/slide-04.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-05"><div class="slide-caption"><span>05</span><span>Инновация</span></div><figure class="slide-frame"><img src="./assets/slides/slide-05.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-06"><div class="slide-caption"><span>06</span><span>Персонажи</span></div><figure class="slide-frame"><img src="./assets/slides/slide-06.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-07"><div class="slide-caption"><span>07</span><span>Авторское</span></div><figure class="slide-frame"><img src="./assets/slides/slide-07.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-08"><div class="slide-caption"><span>08</span><span>Сезон 1</span></div><figure class="slide-frame"><img src="./assets/slides/slide-08.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-09"><div class="slide-caption"><span>09</span><span>Сезон 2</span></div><figure class="slide-frame"><img src="./assets/slides/slide-09.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-10"><div class="slide-caption"><span>10</span><span>Драматургия</span></div><figure class="slide-frame"><img src="./assets/slides/slide-10.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-11"><div class="slide-caption"><span>11</span><span>Аудитория</span></div><figure class="slide-frame"><img src="./assets/slides/slide-11.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-12"><div class="slide-caption"><span>12</span><span>Команда</span></div><figure class="slide-frame"><img src="./assets/slides/slide-12.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-13"><div class="slide-caption"><span>13</span><span>Бюджет</span></div><figure class="slide-frame"><img src="./assets/slides/slide-13.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-14"><div class="slide-caption"><span>14</span><span>Дистрибуция</span></div><figure class="slide-frame"><img src="./assets/slides/slide-14.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-15"><div class="slide-caption"><span>15</span><span>Потребности</span></div><figure class="slide-frame"><img src="./assets/slides/slide-15.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-16"><div class="slide-caption"><span>16</span><span>Правовой статус</span></div><figure class="slide-frame"><img src="./assets/slides/slide-16.jpg" alt=""></figure></article>
-      <article class="deck-slide" id="slide-17"><div class="slide-caption"><span>17</span><span>Финал</span></div><figure class="slide-frame"><img src="./assets/slides/slide-17.jpg" alt=""></figure></article>
+    <section class="slides" id="slides" aria-label="Слайды презентации">
+      <article class="deck-slide" id="slide-01">
+        <div class="slide-caption"><span>Слайд 01</span><span>Обложка</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-01.jpg" alt="Слайд 01 — Камертон" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-02">
+        <div class="slide-caption"><span>Слайд 02</span><span>Содержание</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-02.jpg" alt="Слайд 02 — Содержание" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-03">
+        <div class="slide-caption"><span>Слайд 03</span><span>Логлайн, жанр, тон</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-03.jpg" alt="Слайд 03 — Логлайн, жанр, тон" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-04">
+        <div class="slide-caption"><span>Слайд 04</span><span>Мир и визуальный стиль</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-04.jpg" alt="Слайд 04 — Мир и визуальный стиль" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-05">
+        <div class="slide-caption"><span>Слайд 05</span><span>Ключевая инновация</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-05.jpg" alt="Слайд 05 — Уникальная ценность и ключевая инновация" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-06">
+        <div class="slide-caption"><span>Слайд 06</span><span>Главные персонажи</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-06.jpg" alt="Слайд 06 — Главные персонажи" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-07">
+        <div class="slide-caption"><span>Слайд 07</span><span>Авторское высказывание</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-07.jpg" alt="Слайд 07 — Авторское высказывание" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-08">
+        <div class="slide-caption"><span>Слайд 08</span><span>Обзор сезона 1</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-08.jpg" alt="Слайд 08 — Обзор сезона 1" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-09">
+        <div class="slide-caption"><span>Слайд 09</span><span>Обзор сезона 2</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-09.jpg" alt="Слайд 09 — Обзор сезона 2" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-10">
+        <div class="slide-caption"><span>Слайд 10</span><span>Драматургия</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-10.jpg" alt="Слайд 10 — Драматургия" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-11">
+        <div class="slide-caption"><span>Слайд 11</span><span>Аудитория и аналоги</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-11.jpg" alt="Слайд 11 — Аудитория и сравнительные аналоги" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-12">
+        <div class="slide-caption"><span>Слайд 12</span><span>Команда и статус</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-12.jpg" alt="Слайд 12 — Команда и статус разработки" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-13">
+        <div class="slide-caption"><span>Слайд 13</span><span>Бюджет и финансирование</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-13.jpg" alt="Слайд 13 — Бюджет и финансирование" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-14">
+        <div class="slide-caption"><span>Слайд 14</span><span>Дистрибуция</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-14.jpg" alt="Слайд 14 — Дистрибуция и стратегия" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-15">
+        <div class="slide-caption"><span>Слайд 15</span><span>Потребности проекта</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-15.jpg" alt="Слайд 15 — Потребности проекта" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-16">
+        <div class="slide-caption"><span>Слайд 16</span><span>Правовой статус</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-16.jpg" alt="Слайд 16 — Правовой статус и права на проект" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
+      <article class="deck-slide" id="slide-17">
+        <div class="slide-caption"><span>Слайд 17</span><span>Финал</span></div>
+        <figure class="slide-frame"><img src="./assets/slides/slide-17.jpg" alt="Слайд 17 — Финальный слайд" width="1440" height="900" loading="lazy" decoding="async"></figure>
+      </article>
     </section>
   </main>
 
-  <footer class="site-footer">
-    <p>© Проект «Камертон». Все права защищены.</p>
-  </footer>
+  <button class="icon-button back-to-top" type="button" data-back-to-top aria-label="Наверх">
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 5l-6 6m6-6l6 6m-6-6v14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
 
-  <button class="back-to-top" data-back-to-top aria-label="Наверх">↑</button>
+  <div class="player" aria-label="Музыкальное сопровождение">
+    <button class="player-play" id="btnPlay" type="button" aria-label="Воспроизвести музыку" aria-pressed="false">
+      <svg id="iconPlay" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 6.5v11l9-5.5-9-5.5z"></path>
+      </svg>
+      <svg id="iconPause" viewBox="0 0 24 24" aria-hidden="true" style="display:none">
+        <path d="M8 6h3v12H8zm5 0h3v12h-3z"></path>
+      </svg>
+    </button>
 
-  <div class="player">
-    <button class="player-play" id="btnPlay">▶</button>
-    <div class="player-label">🎵 Фоновая музыка (требуется audio.mp3)</div>
+    <button class="icon-button player-mute" id="btnMute" type="button" aria-label="Выключить звук" aria-pressed="false">
+      <svg id="iconWaves" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M4 10h4l5-4v12l-5-4H4z"/>
+        <path d="M16 9.5c1 .9 1.5 1.8 1.5 2.5s-.5 1.6-1.5 2.5"/>
+        <path d="M18.5 7c1.8 1.5 2.7 3.2 2.7 5s-.9 3.5-2.7 5"/>
+      </svg>
+      <svg id="iconMuted" viewBox="0 0 24 24" aria-hidden="true" style="display:none">
+        <path d="M4 10h4l5-4v12l-5-4H4z"/>
+        <path d="M17 9l4 6"/>
+        <path d="M21 9l-4 6"/>
+      </svg>
+    </button>
+
+    <input class="player-range" id="vol" type="range" min="0" max="1" step="0.01" value="0.55" aria-label="Громкость">
+
+    <div class="player-label">
+      <strong data-player-status>Музыка ожидает файл symphony.mp3</strong>
+      <span>Источник: assets/audio/symphony.mp3</span>
+    </div>
+
+    <audio id="audio" preload="metadata" crossorigin="anonymous">
+      <source src="assets/audio/symphony.mp3" type="audio/mpeg">
+    </audio>
   </div>
 
-  <audio id="audio" loop preload="metadata">
-    <source src="./assets/audio/symphony.mp3" type="audio/mpeg">
-  </audio>
-
-  <script>
-    (function() {
-      const root = document.documentElement;
-      const themeToggle = document.querySelector("[data-theme-toggle]");
-      const progress = document.getElementById("progress");
-      const backToTop = document.querySelector("[data-back-to-top]");
-      const slides = Array.from(document.querySelectorAll(".deck-slide"));
-      const navLinks = Array.from(document.querySelectorAll(".slide-link"));
-
-      let theme = "dark";
-
-      function updateProgress() {
-        const winScroll = window.scrollY;
-        const height = document.documentElement.scrollHeight - window.innerHeight;
-        const scrolled = (winScroll / height) * 100;
-        if (progress) progress.style.width = scrolled + "%";
-        if (backToTop) {
-          backToTop.classList.toggle("is-visible", winScroll > 300);
-        }
-      }
-
-      function updateActiveNav() {
-        const fromTop = window.scrollY + 150;
-        let current = "";
-        slides.forEach(slide => {
-          const sectionTop = slide.offsetTop;
-          const sectionBottom = sectionTop + slide.offsetHeight;
-          if (fromTop >= sectionTop && fromTop <= sectionBottom) {
-            current = slide.getAttribute("id");
-          }
-        });
-        navLinks.forEach(link => {
-          link.classList.remove("is-active");
-          if (link.getAttribute("href") === "#" + current) {
-            link.classList.add("is-active");
-          }
-        });
-      }
-
-      function revealSlides() {
-        slides.forEach(slide => {
-          const rect = slide.getBoundingClientRect();
-          if (rect.top < window.innerHeight - 100) {
-            slide.classList.add("is-visible");
-          }
-        });
-      }
-
-      if (themeToggle) {
-        themeToggle.addEventListener("click", () => {
-          theme = theme === "dark" ? "light" : "dark";
-          root.setAttribute("data-theme", theme);
-          themeToggle.textContent = theme === "dark" ? "🌙" : "☀️";
-        });
-      }
-
-      window.addEventListener("scroll", () => {
-        updateProgress();
-        updateActiveNav();
-        revealSlides();
-      });
-      window.addEventListener("resize", revealSlides);
-      revealSlides();
-      updateProgress();
-
-      navLinks.forEach(link => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          const id = link.getAttribute("href").slice(1);
-          const el = document.getElementById(id);
-          if (el) {
-            el.scrollIntoView({ behavior: "smooth" });
-          }
-        });
-      });
-
-      const audio = document.getElementById("audio");
-      const btnPlay = document.getElementById("btnPlay");
-
-      if (audio && btnPlay) {
-        let audioAvailable = false;
-        audio.volume = 0.5;
-        audio.addEventListener("canplay", () => {
-          audioAvailable = true;
-        });
-        audio.addEventListener("error", () => {
-          btnPlay.textContent = "🔇";
-        });
-        btnPlay.addEventListener("click", () => {
-          if (!audioAvailable) return;
-          if (audio.paused) {
-            audio.play();
-            btnPlay.textContent = "⏸";
-          } else {
-            audio.pause();
-            btnPlay.textContent = "▶";
-          }
-        });
-      }
-    })();
-  </script>
+  <footer class="site-footer">
+    <p>© Каннингем Анна Грейс, проект «Камертон», 2026. Материалы предназначены исключительно для презентационного ознакомления потенциальным партнёрам и инвесторам.</p>
+  </footer>
 </body>
 </html>
