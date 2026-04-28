@@ -13,10 +13,13 @@
   function renderThemeButton() {
     if (!themeToggle) return;
     const isDark = theme === "dark";
-    themeToggle.setAttribute("aria-label", isDark ? "Переключить на светлый режим" : "Переключить на тёмный режим");
+    themeToggle.setAttribute(
+      "aria-label",
+      isDark ? "Переключить на светлый режим" : "Переключить на тёмный режим"
+    );
     themeToggle.innerHTML = isDark
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5v2.4M12 18.1v2.4M4.93 4.93l1.7 1.7M17.37 17.37l1.7 1.7M3.5 12h2.4M18.1 12h2.4M4.93 19.07l1.7-1.7M17.37 6.63l1.7-1.7M12 7.2a4.8 4.8 0 1 1 0 9.6a4.8 4.8 0 0 1 0-9.6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.2 14.2A8.5 8.5 0 0 1 9.8 3.8a9 9 0 1 0 10.4 10.4Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>';
+      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M5 5l1.5 1.5M17.5 17.5L19 19M3 12h2m14 0h2M5 19l1.5-1.5M17.5 6.5L19 5"/><circle cx="12" cy="12" r="4.5"/></svg>'
+      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 12 19a7 7 0 0 0 9-6.21Z"/></svg>';
   }
 
   themeToggle && themeToggle.addEventListener("click", () => {
@@ -24,18 +27,21 @@
     root.setAttribute("data-theme", theme);
     renderThemeButton();
   });
-
   renderThemeButton();
 
   images.forEach((img) => {
-    img.addEventListener("error", () => {
-      const fallback = document.createElement("div");
-      fallback.className = "img-fallback";
-      fallback.setAttribute("role", "img");
-      fallback.setAttribute("aria-label", img.alt || "Слайд временно недоступен");
-      fallback.textContent = (img.alt || "Слайд") + " — файл изображения не найден.";
-      img.replaceWith(fallback);
-    }, { once: true });
+    img.addEventListener(
+      "error",
+      () => {
+        const fallback = document.createElement("div");
+        fallback.className = "img-fallback";
+        fallback.setAttribute("role", "img");
+        fallback.setAttribute("aria-label", img.alt || "Слайд временно недоступен");
+        fallback.textContent = (img.alt || "Слайд") + " — файл изображения не найден.";
+        img.replaceWith(fallback);
+      },
+      { once: true }
+    );
   });
 
   function activateNav(id) {
@@ -49,7 +55,6 @@
     const center = window.innerHeight * 0.45;
     let best = slides[0];
     let bestDistance = Infinity;
-
     slides.forEach((slide) => {
       const rect = slide.getBoundingClientRect();
       const distance = Math.abs(rect.top - center);
@@ -58,7 +63,6 @@
         bestDistance = distance;
       }
     });
-
     activateNav(best.id);
   }
 
@@ -78,37 +82,53 @@
   function updateProgress() {
     const doc = document.documentElement;
     const max = Math.max(1, doc.scrollHeight - doc.clientHeight);
-    const ratio = Math.min(1, Math.max(0, (window.scrollY || doc.scrollTop || 0) / max));
-    if (progress) progress.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+    const ratio = Math.min(
+      1,
+      Math.max(0, (window.scrollY || doc.scrollTop || 0) / max)
+    );
+    progress && (progress.style.transform = "scaleX(" + ratio.toFixed(4) + ")");
     if (backToTop) {
-      backToTop.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.75);
+      backToTop.classList.toggle(
+        "is-visible",
+        window.scrollY > window.innerHeight * 0.75
+      );
     }
-    updateActiveNav();
   }
 
-  const revealObserver = "IntersectionObserver" in window
-    ? new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add("is-visible");
-        });
-      }, { rootMargin: "0px 0px -10% 0px", threshold: 0.08 })
-    : null;
+  updateActiveNav();
+
+  const revealObserver =
+    "IntersectionObserver" in window
+      ? new IntersectionObserver(
+          (entries) => {
+            entries.forEach((entry) => {
+              if (entry.isIntersecting) entry.target.classList.add("is-visible");
+            });
+          },
+          { rootMargin: "0px 0px -10% 0px", threshold: 0.08 }
+        )
+      : null;
 
   slides.forEach((slide) => {
     if (revealObserver) revealObserver.observe(slide);
     else slide.classList.add("is-visible");
   });
 
-  if (backToTop) {
-    backToTop.addEventListener("click", () => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }
-
-  window.addEventListener("scroll", updateProgress, { passive: true });
-  window.addEventListener("resize", updateProgress);
-  window.addEventListener("load", updateProgress);
+  window.addEventListener("scroll", () => {
+    updateProgress();
+    updateActiveNav();
+  }, { passive: true });
+  window.addEventListener("resize", () => {
+    updateProgress();
+    updateActiveNav();
+  });
+  window.addEventListener("load", () => {
+    updateProgress();
+    updateActiveNav();
+  });
   updateProgress();
+
+  /* Аудиоплеер */
 
   const audio = document.getElementById("audio");
   const btnPlay = document.getElementById("btnPlay");
@@ -161,33 +181,41 @@
       syncPlayIcon();
     });
 
-    btnPlay && btnPlay.addEventListener("click", (event) => {
-      event.preventDefault();
-      if (!audioAvailable) return;
-      if (audio.paused) {
-        audio.play().then(syncPlayIcon).catch(() => setStatus("Нажмите ещё раз для запуска музыки"));
-      } else {
-        audio.pause();
-        syncPlayIcon();
-      }
-    });
+    btnPlay &&
+      btnPlay.addEventListener("click", (event) => {
+        event.preventDefault();
+        if (!audioAvailable) return;
+        if (audio.paused) {
+          audio
+            .play()
+            .then(syncPlayIcon)
+            .catch(() =>
+              setStatus("Нажмите ещё раз для запуска музыки")
+            );
+        } else {
+          audio.pause();
+          syncPlayIcon();
+        }
+      });
 
-    btnMute && btnMute.addEventListener("click", (event) => {
-      event.preventDefault();
-      muted = !muted;
-      audio.muted = muted;
-      syncMuteIcon();
-    });
-
-    vol && vol.addEventListener("input", (event) => {
-      const value = parseFloat(event.target.value);
-      audio.volume = value;
-      if (muted && value > 0) {
-        muted = false;
-        audio.muted = false;
+    btnMute &&
+      btnMute.addEventListener("click", (event) => {
+        event.preventDefault();
+        muted = !muted;
+        audio.muted = muted;
         syncMuteIcon();
-      }
-    });
+      });
+
+    vol &&
+      vol.addEventListener("input", (event) => {
+        const value = parseFloat(event.target.value);
+        audio.volume = value;
+        if (muted && value > 0) {
+          muted = false;
+          audio.muted = false;
+          syncMuteIcon();
+        }
+      });
 
     audio.addEventListener("play", syncPlayIcon);
     audio.addEventListener("pause", syncPlayIcon);
