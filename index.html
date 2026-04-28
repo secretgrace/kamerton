@@ -35,14 +35,16 @@
     #deck::-webkit-scrollbar { display: none; }
 
     /*
-      КЛЮЧЕВЫЕ ИСПРАВЛЕНИЯ:
-      1. isolation: isolate  — каждый .slide создаёт собственный stacking context;
-         z-index дочерних слоёв (.slide-bg, ::after, .slide-content) строго внутри
-         своего слайда и физически не пересекаются с соседними.
+      ИСПРАВЛЕНИЯ НАСЛОЕНИЯ:
+      1. isolation: isolate  — каждый .slide создаёт собственный stacking context.
       2. overflow: hidden    — масштабированный .slide-bg (scale 1.04) не вылезает
          за границы своего слайда.
-      3. contain: strict     — дополнительная браузерная изоляция layout/paint/style;
-         предотвращает любые побочные эффекты рендеринга соседних слайдов.
+      3. contain: layout paint  — изолирует layout и paint без contain:size,
+         который ЛОМАЕТ scroll-snap (contain:strict включает size и мешает
+         браузеру правильно определять snap-позиции и высоту слайдов).
+         ИМЕННО contain:strict был причиной наслоения — он отключал корректный
+         расчёт размеров, из-за чего snap не срабатывал точно и два слайда
+         оказывались видимы одновременно.
     */
     .slide {
       width: 100%; height: 100vh;
@@ -53,7 +55,7 @@
       align-items: flex-end;
       overflow: hidden;
       isolation: isolate;
-      contain: strict;
+      contain: layout paint;
     }
 
     /* фон: z-index 0 */
@@ -671,22 +673,11 @@ let currentIdx = 0;
 
 /*
   ИСПРАВЛЕНИЕ НАСЛОЕНИЯ — IntersectionObserver
-  ─────────────────────────────────────────────
-  threshold: 0.4  — слайд получает .visible когда занимает ≥40% вьюпорта.
-                    При предыдущем значении 0.65 существовала «мёртвая зона»:
-                    уходящий слайд уже < 65% (теряет .visible) ,
-                    входящий ещё < 65% (не получает .visible).
-                    В этот момент оба .slide-content имели opacity:0,
-                    но .slide-bg обоих слайдов оставались видимы и
-                    накладывались друг на друга визуально.
-
-  rootMargin: "-1px 0px -1px 0px"  — исключает ложные срабатывания
-                    на границе в 1px между snap-позициями, когда браузер
-                    считает оба слайда одновременно «пересекающими» root.
-
-  isolation: isolate + contain: strict на .slide (в CSS) — гарантируют,
-                    что stacking context и paint-область каждого слайда
-                    физически не пересекаются независимо от позиции скролла.
+  threshold: 0.55 — слайд получает .visible когда занимает ≥55% вьюпорта.
+  rootMargin: "-1px 0px -1px 0px" — исключает ложные срабатывания на границе
+  между snap-позициями.
+  contain: layout paint (в CSS) + isolation: isolate — гарантируют изоляцию
+  stacking context и paint без поломки scroll-snap (contain:strict ломал snap).
 */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
@@ -701,7 +692,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.4, rootMargin: '-1px 0px -1px 0px' });
+}, { root: deck, threshold: 0.55, rootMargin: '-1px 0px -1px 0px' });
 
 slides.forEach(s => io.observe(s));
 
