@@ -36,11 +36,30 @@
     #deck::-webkit-scrollbar { display: none; }
 
     /*
-      РЕШЕНИЕ НАСЛОЕНИЯ:
-      - isolation: isolate + overflow: hidden на .slide изолируют содержимое
-      - только .slide-content управляется opacity (не visibility)
-      - threshold снижен до 0.6, чтобы надёжно срабатывать на мобильных
-        браузерах, где 95% видимости недостижимо из-за системных панелей
+      КЛЮЧЕВОЕ ИСПРАВЛЕНИЕ НАСЛОЕНИЯ:
+      ─────────────────────────────────
+      1. isolation: isolate + overflow: hidden — каждый слайд
+         является полностью замкнутым stacking context.
+         Его дочерние z-index не пересекаются с соседними слайдами.
+
+      2. clip-path: inset(0) — жёсткая обрезка содержимого.
+         Даже если slide-bg масштабируется через scale(1.04),
+         он физически не может выйти за пределы слайда
+         и «просветить» в соседний.
+
+      3. .slide-content по умолчанию visibility: hidden
+         (НЕ только opacity:0).
+         visibility:hidden полностью убирает элемент из рендера —
+         браузер не рисует его пиксели вообще.
+         opacity:0 убирает только прозрачность, но элемент
+         продолжает участвовать в compositing-дереве
+         и может «просвечивать» через соседей при GPU-ускорении.
+
+      4. Observer: threshold: [0, 0.55]
+         При threshold:0 мы получаем событие «слайд ушёл»
+         немедленно — как только хотя бы 1px вышел из зоны.
+         Это обеспечивает мгновенное снятие visible с уходящего слайда
+         ещё до того как следующий начнёт появляться.
     */
     .slide {
       width: 100%; height: 100vh;
@@ -49,8 +68,10 @@
       position: relative;
       display: flex;
       align-items: flex-end;
+      /* тройная изоляция: */
       overflow: hidden;
       isolation: isolate;
+      clip-path: inset(0);
     }
 
     /* фон: z-index 0 */
@@ -92,7 +113,12 @@
       );
     }
 
-    /* Контент: скрыт opacity:0 когда слайд не active */
+    /*
+      visibility:hidden — не рисует пиксели вообще.
+      opacity:0 остаётся для плавной анимации появления,
+      но именно visibility обеспечивает полную изоляцию
+      до момента активации слайда.
+    */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -100,15 +126,18 @@
       padding: 0 6vw 5vh;
       max-width: 1400px;
       margin: 0 auto;
+      visibility: hidden;
       opacity: 0;
       pointer-events: none;
       transform: translateY(18px);
-      transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s;
+      transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s, visibility 0s linear 0.7s;
     }
     .slide.visible .slide-content {
+      visibility: visible;
       opacity: 1;
       pointer-events: auto;
       transform: none;
+      transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s, visibility 0s linear 0s;
     }
 
     .slide.light { align-items: flex-start; }
@@ -672,35 +701,57 @@ const total    = slides.length;
 let currentIdx = 0;
 
 /*
-  ИСПРАВЛЕНИЕ НАСЛОЕНИЯ:
+  ИСПРАВЛЕНИЕ НАСЛОЕНИЯ — финальная версия:
 
-  Проблема была в threshold: 0.95 — на мобильных браузерах слайд
-  никогда не достигал 95% видимости из-за системных панелей (адресная
-  строка, навигационный бар), поэтому класс .visible не добавлялся,
-  .slide-content оставался с opacity:0, но сама секция всё равно
-  отображалась — и за её прозрачным контентом был виден контент
-  предыдущего слайда.
+  Проблема была в том, что при threshold: 0.6 обоим соседним слайдам
+  одновременно присваивался класс .visible в момент скролла —
+  и оба имели opacity:1 / visibility:visible одновременно.
 
-  Решение:
-  - threshold: 0.6 — слайд считается активным когда занимает >60% экрана
-  - rootMargin: '0px' — без дополнительных отступов
-  - При активации нового слайда явно снимаем .visible со всех остальных
+  Решение: используем threshold: [0, 1] и определяем «активный» слайд
+  как тот, который занимает МАКСИМАЛЬНУЮ долю вьюпорта прямо сейчас.
+  Только он получает .visible. Все остальные — никогда.
+
+  Дополнительно: visibility:hidden вместо только opacity:0.
+  visibility:hidden полностью исключает элемент из рендеринга,
+  браузер не рисует его пиксели — в отличие от opacity:0,
+  который только делает их прозрачными, но они продолжают участвовать
+  в GPU compositing и могут «просвечивать».
 */
-const io = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      slides.forEach(s => { if (s !== e.target) s.classList.remove('visible'); });
-      e.target.classList.add('visible');
-      const idx = slides.indexOf(e.target);
+
+// Карта видимости: слайд → его текущий intersectionRatio
+const ratioMap = new Map();
+slides.forEach(s => ratioMap.set(s, 0));
+
+function updateActive() {
+  // найти слайд с максимальным ratio
+  let best = null, bestRatio = 0;
+  ratioMap.forEach((ratio, slide) => {
+    if (ratio > bestRatio) { bestRatio = ratio; best = slide; }
+  });
+
+  slides.forEach(s => {
+    if (s === best && bestRatio > 0.1) {
+      s.classList.add('visible');
+      const idx = slides.indexOf(s);
       currentIdx = idx;
       counter.textContent = String(idx + 1).padStart(2,'0') + ' / ' + String(total).padStart(2,'0');
       progress.style.width = ((idx / (total - 1)) * 100) + '%';
       if (idx > 0) hint.classList.add('hidden');
     } else {
-      e.target.classList.remove('visible');
+      s.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.6 });
+}
+
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    ratioMap.set(e.target, e.intersectionRatio);
+  });
+  updateActive();
+}, {
+  root: deck,
+  threshold: Array.from({length: 21}, (_, i) => i * 0.05) // [0, 0.05, 0.10, … 1.0]
+});
 
 slides.forEach(s => io.observe(s));
 
