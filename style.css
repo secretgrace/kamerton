@@ -120,23 +120,25 @@ body::before {
   transform-origin: left;
 }
 
+/* компактный верхний бар */
+
 .topbar {
   position: sticky;
-  top: var(--space-4);
+  top: var(--space-2);
   z-index: 100;
-  width: min(1400px, calc(100% - clamp(24px, 6vw, 80px)));
-  margin: var(--space-4) auto 0;
+  width: min(1200px, calc(100% - clamp(16px, 5vw, 56px)));
+  margin: var(--space-2) auto 0;
   display: grid;
-  grid-template-columns: minmax(190px, auto) 1fr auto;
+  grid-template-columns: minmax(170px, auto) 1fr auto;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-xl);
   background: color-mix(in srgb, var(--color-surface-strong) 86%, transparent);
-  box-shadow: 0 22px 60px var(--color-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: var(--space-2);
+  box-shadow: 0 16px 40px var(--color-shadow);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 4px 10px;
   min-width: 0;
 }
 
@@ -144,15 +146,15 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-4) var(--space-2) var(--space-3);
-  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  min-height: 40px;
   text-decoration: none;
   min-width: 0;
 }
 
 .brand-mark {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   color: var(--color-accent);
   flex: 0 0 auto;
 }
@@ -165,7 +167,7 @@ body::before {
 
 .brand-title {
   font-family: var(--font-display);
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   letter-spacing: 0.18em;
   line-height: 1;
   text-transform: uppercase;
@@ -173,7 +175,7 @@ body::before {
 
 .brand-subtitle {
   color: var(--color-text-faint);
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   letter-spacing: 0.12em;
   line-height: 1.2;
   text-transform: uppercase;
@@ -182,10 +184,10 @@ body::before {
 .slide-nav {
   display: flex;
   gap: var(--space-1);
-  justify-content: center;
+  justify-content: flex-start;
   overflow-x: auto;
   scrollbar-width: none;
-  padding-inline: var(--space-2);
+  padding-inline: var(--space-1);
   min-width: 0;
   max-width: 100%;
 }
@@ -195,8 +197,8 @@ body::before {
 }
 
 .slide-link {
-  min-width: 36px;
-  min-height: 36px;
+  min-width: 30px;
+  min-height: 30px;
   display: grid;
   place-items: center;
   border-radius: var(--radius-full);
@@ -220,13 +222,13 @@ body::before {
 .topbar-actions {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  min-width: 44px;
+  gap: var(--space-1);
+  min-width: 36px;
 }
 
 .icon-button {
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 36px;
+  min-height: 36px;
   display: inline-grid;
   place-items: center;
   border-radius: var(--radius-full);
@@ -248,12 +250,12 @@ body::before {
 }
 
 .icon-button svg {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
 }
 
 .page {
-  width: min(1400px, calc(100% - clamp(24px, 6vw, 80px)));
+  width: min(1200px, calc(100% - clamp(16px, 5vw, 56px)));
   margin-inline: auto;
 }
 
@@ -443,31 +445,32 @@ body::before {
   text-align: center;
 }
 
+/* компактный плеер справа */
+
 .player {
   position: fixed;
-  left: 50%;
+  right: var(--space-4);
   bottom: var(--space-4);
   z-index: 110;
-  width: min(720px, calc(100% - 24px));
-  max-width: calc(100vw - 24px);
-  transform: translateX(-50%);
+  width: min(420px, calc(100% - 24px));
+  transform: none;
   display: grid;
-  grid-template-columns: auto auto minmax(90px, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-full);
-  background: color-mix(in srgb, var(--color-surface-strong) 88%, transparent);
-  box-shadow: 0 24px 70px var(--color-shadow);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: var(--space-2) var(--space-3);
+  background: color-mix(in srgb, var(--color-surface-strong) 92%, transparent);
+  box-shadow: 0 16px 46px var(--color-shadow);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  padding: 6px 10px;
   min-width: 0;
 }
 
 .player-play {
-  width: 44px;
-  height: 44px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border: 1px solid var(--color-border);
@@ -486,34 +489,41 @@ body::before {
 }
 
 .player-play svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   fill: currentColor;
 }
 
+.player-mute {
+  min-width: 32px;
+  min-height: 32px;
+}
+
 .player-mute svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.7;
+  stroke-width: 1.6;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 
 .player-range {
   width: 100%;
-  min-width: 90px;
+  min-width: 80px;
   accent-color: var(--color-accent);
 }
 
 .player-label {
+  grid-column: 1 / -1;
+  margin-top: 2px;
   min-width: 0;
   display: grid;
   gap: 1px;
   color: var(--color-text-muted);
   font-size: var(--text-xs);
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   line-height: 1.25;
 }
 
@@ -533,10 +543,12 @@ body::before {
   white-space: nowrap;
 }
 
+/* «наверх» повыше, чтобы не конфликтовал с плеером */
+
 .back-to-top {
   position: fixed;
   right: var(--space-4);
-  bottom: calc(var(--space-4) + 86px);
+  bottom: calc(var(--space-4) + 72px);
   z-index: 130;
   opacity: 0;
   pointer-events: none;
@@ -551,7 +563,7 @@ body::before {
 }
 
 .site-footer {
-  width: min(1400px, calc(100% - clamp(24px, 6vw, 80px)));
+  width: min(1200px, calc(100% - clamp(16px, 5vw, 56px)));
   margin: 0 auto;
   padding: var(--space-8) 0 var(--space-16);
   border-top: 1px solid var(--color-border-soft);
@@ -562,6 +574,8 @@ body::before {
 .site-footer p {
   max-width: 92ch;
 }
+
+/* адаптация */
 
 @media (max-width: 1080px) {
   .topbar {
@@ -646,25 +660,22 @@ body::before {
   }
 
   .player {
-    grid-template-columns: auto auto 1fr;
+    right: 50%;
+    bottom: var(--space-3);
+    transform: translateX(50%);
     width: calc(100vw - 24px);
-    max-width: calc(100vw - 24px);
+    grid-template-columns: auto minmax(0, 1fr) auto;
     border-radius: var(--radius-xl);
-    padding: var(--space-2);
-  }
-
-  .player-range {
-    min-width: 0;
   }
 
   .player-label {
     grid-column: 1 / -1;
-    padding-inline: var(--space-2);
+    padding-inline: var(--space-1);
   }
 
   .back-to-top {
     right: var(--space-3);
-    bottom: 158px;
+    bottom: calc(var(--space-3) + 80px);
   }
 }
 
