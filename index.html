@@ -36,20 +36,11 @@
     #deck::-webkit-scrollbar { display: none; }
 
     /*
-      ПРАВИЛЬНОЕ РЕШЕНИЕ НАСЛОЕНИЯ:
-
-      Проблема была в том, что visibility:hidden на .slide также скрывал
-      .slide-bg, даже при явном visibility:visible на нём — это стандартное
-      поведение CSS: дочерний visibility:visible не работает внутри
-      родителя с visibility:hidden.
-
-      Решение:
-      - .slide НЕ скрывается через visibility. Он всегда виден как контейнер.
-      - isolation: isolate + overflow: hidden на .slide изолируют его содержимое.
-      - Только .slide-content (текст) скрывается через opacity:0 когда слайд не активен.
-      - .slide-bg всегда рендерится, но обрезан через overflow:hidden родителя.
-      - Наслоения нет, потому что каждый .slide занимает 100vh и scroll-snap
-        не позволяет двум слайдам одновременно занимать экран.
+      РЕШЕНИЕ НАСЛОЕНИЯ:
+      - isolation: isolate + overflow: hidden на .slide изолируют содержимое
+      - только .slide-content управляется opacity (не visibility)
+      - threshold снижен до 0.6, чтобы надёжно срабатывать на мобильных
+        браузерах, где 95% видимости недостижимо из-за системных панелей
     */
     .slide {
       width: 100%; height: 100vh;
@@ -62,7 +53,7 @@
       isolation: isolate;
     }
 
-    /* фон: z-index 0. Всегда виден */
+    /* фон: z-index 0 */
     .slide-bg {
       position: absolute;
       inset: 0;
@@ -101,11 +92,7 @@
       );
     }
 
-    /*
-      Только контент скрывается через opacity.
-      opacity:0 + pointer-events:none = контент невидим и не кликабелен,
-      но слайд как контейнер остаётся в потоке и правильно занимает 100vh.
-    */
+    /* Контент: скрыт opacity:0 когда слайд не active */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -685,10 +672,19 @@ const total    = slides.length;
 let currentIdx = 0;
 
 /*
-  Только .slide-content скрыт/показан через opacity.
-  .slide как контейнер всегда присутствует в потоке.
-  threshold: 0.95 — контент появляется только когда слайд
-  почти полностью занимает экран.
+  ИСПРАВЛЕНИЕ НАСЛОЕНИЯ:
+
+  Проблема была в threshold: 0.95 — на мобильных браузерах слайд
+  никогда не достигал 95% видимости из-за системных панелей (адресная
+  строка, навигационный бар), поэтому класс .visible не добавлялся,
+  .slide-content оставался с opacity:0, но сама секция всё равно
+  отображалась — и за её прозрачным контентом был виден контент
+  предыдущего слайда.
+
+  Решение:
+  - threshold: 0.6 — слайд считается активным когда занимает >60% экрана
+  - rootMargin: '0px' — без дополнительных отступов
+  - При активации нового слайда явно снимаем .visible со всех остальных
 */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
@@ -704,7 +700,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.95 });
+}, { root: deck, threshold: 0.6 });
 
 slides.forEach(s => io.observe(s));
 
