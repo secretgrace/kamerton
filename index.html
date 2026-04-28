@@ -29,22 +29,22 @@
     #deck {
       width: 100%; height: 100vh;
       overflow-y: scroll;
+      overflow-x: hidden;       /* не даёт .slide-bg вылезти горизонтально */
       scroll-snap-type: y mandatory;
       scrollbar-width: none;
     }
     #deck::-webkit-scrollbar { display: none; }
 
     /*
-      ИСПРАВЛЕНИЯ НАСЛОЕНИЯ:
-      1. isolation: isolate  — каждый .slide создаёт собственный stacking context.
-      2. overflow: hidden    — масштабированный .slide-bg (scale 1.04) не вылезает
-         за границы своего слайда.
-      3. contain: layout paint  — изолирует layout и paint без contain:size,
-         который ЛОМАЕТ scroll-snap (contain:strict включает size и мешает
-         браузеру правильно определять snap-позиции и высоту слайдов).
-         ИМЕННО contain:strict был причиной наслоения — он отключал корректный
-         расчёт размеров, из-за чего snap не срабатывал точно и два слайда
-         оказывались видимы одновременно.
+      КЛЮЧЕВЫЕ ПРАВИЛА ПРОТИВ НАСЛОЕНИЯ:
+      isolation: isolate  — каждый .slide создаёт независимый stacking context,
+                            z-index дочерних слоёв не конкурируют со слоями соседей.
+      overflow: hidden    — .slide-bg со scale(1.04) не выходит за границы слайда.
+      contain: layout paint — изолирует layout и paint, НЕ включает contain:size,
+                              который ломает scroll-snap.
+      visibility: hidden  — скрывает контент слайда когда он НЕ активен.
+                            opacity:0 не даёт гарантий изоляции paint,
+                            visibility:hidden — даёт.
     */
     .slide {
       width: 100%; height: 100vh;
@@ -56,9 +56,16 @@
       overflow: hidden;
       isolation: isolate;
       contain: layout paint;
+      /* По умолчанию — скрыт полностью */
+      visibility: hidden;
     }
 
-    /* фон: z-index 0 */
+    /* Когда слайд активен — показываем */
+    .slide.visible {
+      visibility: visible;
+    }
+
+    /* фон: z-index 0. Всегда виден (для плавного перехода фона) */
     .slide-bg {
       position: absolute;
       inset: 0;
@@ -68,6 +75,8 @@
       background-repeat: no-repeat;
       transition: transform 8s ease-out;
       transform: scale(1.04);
+      /* Фон видим всегда — только контент скрываем через .slide visibility */
+      visibility: visible;
     }
     .slide.visible .slide-bg { transform: scale(1.0); }
 
@@ -85,6 +94,7 @@
       );
       pointer-events: none;
       z-index: 1;
+      visibility: visible;
     }
 
     .slide.light::after {
@@ -97,7 +107,7 @@
       );
     }
 
-    /* контент: z-index 2 */
+    /* контент: z-index 2. Анимируется только при .visible */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -672,16 +682,26 @@ const total    = slides.length;
 let currentIdx = 0;
 
 /*
-  ИСПРАВЛЕНИЕ НАСЛОЕНИЯ — IntersectionObserver
-  threshold: 0.55 — слайд получает .visible когда занимает ≥55% вьюпорта.
-  rootMargin: "-1px 0px -1px 0px" — исключает ложные срабатывания на границе
-  между snap-позициями.
-  contain: layout paint (в CSS) + isolation: isolate — гарантируют изоляцию
-  stacking context и paint без поломки scroll-snap (contain:strict ломал snap).
+  ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ НАСЛОЕНИЯ:
+
+  1. visibility:hidden на .slide (CSS) — слайд физически скрыт когда не активен.
+     opacity:0 недостаточен: браузер всё равно рендерит слой и он может
+     просвечивать через соседние при scroll. visibility:hidden гарантирует,
+     что неактивный слайд полностью исключён из отрисовки.
+
+  2. threshold: 0.9 — слайд получает .visible только когда занимает ≥90%
+     вьюпорта. При промежуточных позициях скролла ни один слайд не достигает
+     90% → оба остаются скрытыми. Только один слайд за раз может быть виден.
+
+  3. Принудительное снятие .visible со всех слайдов перед добавлением нового —
+     страховка от ситуаций, когда IO срабатывает раньше, чем scroll-snap
+     успевает зафиксировать позицию.
 */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
+      // Убираем visible у всех остальных слайдов
+      slides.forEach(s => { if (s !== e.target) s.classList.remove('visible'); });
       e.target.classList.add('visible');
       const idx = slides.indexOf(e.target);
       currentIdx = idx;
@@ -692,7 +712,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.55, rootMargin: '-1px 0px -1px 0px' });
+}, { root: deck, threshold: 0.9 });
 
 slides.forEach(s => io.observe(s));
 
