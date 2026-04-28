@@ -29,22 +29,27 @@
     #deck {
       width: 100%; height: 100vh;
       overflow-y: scroll;
-      overflow-x: hidden;       /* не даёт .slide-bg вылезти горизонтально */
+      overflow-x: hidden;
       scroll-snap-type: y mandatory;
       scrollbar-width: none;
     }
     #deck::-webkit-scrollbar { display: none; }
 
     /*
-      КЛЮЧЕВЫЕ ПРАВИЛА ПРОТИВ НАСЛОЕНИЯ:
-      isolation: isolate  — каждый .slide создаёт независимый stacking context,
-                            z-index дочерних слоёв не конкурируют со слоями соседей.
-      overflow: hidden    — .slide-bg со scale(1.04) не выходит за границы слайда.
-      contain: layout paint — изолирует layout и paint, НЕ включает contain:size,
-                              который ломает scroll-snap.
-      visibility: hidden  — скрывает контент слайда когда он НЕ активен.
-                            opacity:0 не даёт гарантий изоляции paint,
-                            visibility:hidden — даёт.
+      ПРАВИЛЬНОЕ РЕШЕНИЕ НАСЛОЕНИЯ:
+
+      Проблема была в том, что visibility:hidden на .slide также скрывал
+      .slide-bg, даже при явном visibility:visible на нём — это стандартное
+      поведение CSS: дочерний visibility:visible не работает внутри
+      родителя с visibility:hidden.
+
+      Решение:
+      - .slide НЕ скрывается через visibility. Он всегда виден как контейнер.
+      - isolation: isolate + overflow: hidden на .slide изолируют его содержимое.
+      - Только .slide-content (текст) скрывается через opacity:0 когда слайд не активен.
+      - .slide-bg всегда рендерится, но обрезан через overflow:hidden родителя.
+      - Наслоения нет, потому что каждый .slide занимает 100vh и scroll-snap
+        не позволяет двум слайдам одновременно занимать экран.
     */
     .slide {
       width: 100%; height: 100vh;
@@ -55,17 +60,9 @@
       align-items: flex-end;
       overflow: hidden;
       isolation: isolate;
-      contain: layout paint;
-      /* По умолчанию — скрыт полностью */
-      visibility: hidden;
     }
 
-    /* Когда слайд активен — показываем */
-    .slide.visible {
-      visibility: visible;
-    }
-
-    /* фон: z-index 0. Всегда виден (для плавного перехода фона) */
+    /* фон: z-index 0. Всегда виден */
     .slide-bg {
       position: absolute;
       inset: 0;
@@ -75,8 +72,6 @@
       background-repeat: no-repeat;
       transition: transform 8s ease-out;
       transform: scale(1.04);
-      /* Фон видим всегда — только контент скрываем через .slide visibility */
-      visibility: visible;
     }
     .slide.visible .slide-bg { transform: scale(1.0); }
 
@@ -94,7 +89,6 @@
       );
       pointer-events: none;
       z-index: 1;
-      visibility: visible;
     }
 
     .slide.light::after {
@@ -107,7 +101,11 @@
       );
     }
 
-    /* контент: z-index 2. Анимируется только при .visible */
+    /*
+      Только контент скрывается через opacity.
+      opacity:0 + pointer-events:none = контент невидим и не кликабелен,
+      но слайд как контейнер остаётся в потоке и правильно занимает 100vh.
+    */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -116,10 +114,15 @@
       max-width: 1400px;
       margin: 0 auto;
       opacity: 0;
+      pointer-events: none;
       transform: translateY(18px);
       transition: opacity 0.7s ease 0.15s, transform 0.7s ease 0.15s;
     }
-    .slide.visible .slide-content { opacity: 1; transform: none; }
+    .slide.visible .slide-content {
+      opacity: 1;
+      pointer-events: auto;
+      transform: none;
+    }
 
     .slide.light { align-items: flex-start; }
     .slide.light .slide-content { padding: 5vh 6vw 0; }
@@ -682,25 +685,14 @@ const total    = slides.length;
 let currentIdx = 0;
 
 /*
-  ФИНАЛЬНОЕ ИСПРАВЛЕНИЕ НАСЛОЕНИЯ:
-
-  1. visibility:hidden на .slide (CSS) — слайд физически скрыт когда не активен.
-     opacity:0 недостаточен: браузер всё равно рендерит слой и он может
-     просвечивать через соседние при scroll. visibility:hidden гарантирует,
-     что неактивный слайд полностью исключён из отрисовки.
-
-  2. threshold: 0.9 — слайд получает .visible только когда занимает ≥90%
-     вьюпорта. При промежуточных позициях скролла ни один слайд не достигает
-     90% → оба остаются скрытыми. Только один слайд за раз может быть виден.
-
-  3. Принудительное снятие .visible со всех слайдов перед добавлением нового —
-     страховка от ситуаций, когда IO срабатывает раньше, чем scroll-snap
-     успевает зафиксировать позицию.
+  Только .slide-content скрыт/показан через opacity.
+  .slide как контейнер всегда присутствует в потоке.
+  threshold: 0.95 — контент появляется только когда слайд
+  почти полностью занимает экран.
 */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
     if (e.isIntersecting) {
-      // Убираем visible у всех остальных слайдов
       slides.forEach(s => { if (s !== e.target) s.classList.remove('visible'); });
       e.target.classList.add('visible');
       const idx = slides.indexOf(e.target);
@@ -712,7 +704,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.9 });
+}, { root: deck, threshold: 0.95 });
 
 slides.forEach(s => io.observe(s));
 
