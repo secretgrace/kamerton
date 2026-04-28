@@ -34,17 +34,16 @@
     }
     #deck::-webkit-scrollbar { display: none; }
 
-    /* ─── ИСПРАВЛЕНИЕ 1: isolation: isolate ──────────────────────────
-       Каждый .slide создаёт собственный stacking context.
-       z-index дочерних слоёв (.slide-bg, ::after, .slide-content)
-       ограничены своим слайдом и не конкурируют с соседними.
-       Контент предыдущего слайда физически не проникает сквозь
-       фон следующего ни при каком промежуточном положении скролла.
-
-       ИСПРАВЛЕНИЕ 2: overflow: hidden
-       .slide-bg со scale(1.04) не вылезает за границы слайда,
-       что исключает дополнительный источник наслоения.
-    ─────────────────────────────────────────────────────────────── */
+    /*
+      КЛЮЧЕВЫЕ ИСПРАВЛЕНИЯ:
+      1. isolation: isolate  — каждый .slide создаёт собственный stacking context;
+         z-index дочерних слоёв (.slide-bg, ::after, .slide-content) строго внутри
+         своего слайда и физически не пересекаются с соседними.
+      2. overflow: hidden    — масштабированный .slide-bg (scale 1.04) не вылезает
+         за границы своего слайда.
+      3. contain: strict     — дополнительная браузерная изоляция layout/paint/style;
+         предотвращает любые побочные эффекты рендеринга соседних слайдов.
+    */
     .slide {
       width: 100%; height: 100vh;
       scroll-snap-align: start;
@@ -52,11 +51,12 @@
       position: relative;
       display: flex;
       align-items: flex-end;
-      overflow: hidden;        /* FIX 2: clip масштабированный bg */
-      isolation: isolate;      /* FIX 1: собственный stacking context */
+      overflow: hidden;
+      isolation: isolate;
+      contain: strict;
     }
 
-    /* фон: z-index 0 — строго внутри своего изолированного контекста */
+    /* фон: z-index 0 */
     .slide-bg {
       position: absolute;
       inset: 0;
@@ -95,7 +95,7 @@
       );
     }
 
-    /* контент: z-index 2 — строго внутри своего изолированного контекста */
+    /* контент: z-index 2 */
     .slide-content {
       position: relative;
       z-index: 2;
@@ -670,13 +670,23 @@ const total    = slides.length;
 let currentIdx = 0;
 
 /*
-  ИСПРАВЛЕНИЕ 3: threshold 0.65
-  ──────────────────────────────
-  Класс .visible присваивается только когда слайд занимает ≥65%
-  вьюпорта. При промежуточных позициях скролла ни один слайд
-  не получает .visible → .slide-content у обоих opacity:0 →
-  нечему просвечивать на уровне JS.
-  isolation:isolate на .slide устраняет проблему на уровне CSS.
+  ИСПРАВЛЕНИЕ НАСЛОЕНИЯ — IntersectionObserver
+  ─────────────────────────────────────────────
+  threshold: 0.4  — слайд получает .visible когда занимает ≥40% вьюпорта.
+                    При предыдущем значении 0.65 существовала «мёртвая зона»:
+                    уходящий слайд уже < 65% (теряет .visible) ,
+                    входящий ещё < 65% (не получает .visible).
+                    В этот момент оба .slide-content имели opacity:0,
+                    но .slide-bg обоих слайдов оставались видимы и
+                    накладывались друг на друга визуально.
+
+  rootMargin: "-1px 0px -1px 0px"  — исключает ложные срабатывания
+                    на границе в 1px между snap-позициями, когда браузер
+                    считает оба слайда одновременно «пересекающими» root.
+
+  isolation: isolate + contain: strict на .slide (в CSS) — гарантируют,
+                    что stacking context и paint-область каждого слайда
+                    физически не пересекаются независимо от позиции скролла.
 */
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => {
@@ -691,7 +701,7 @@ const io = new IntersectionObserver(entries => {
       e.target.classList.remove('visible');
     }
   });
-}, { root: deck, threshold: 0.65 });
+}, { root: deck, threshold: 0.4, rootMargin: '-1px 0px -1px 0px' });
 
 slides.forEach(s => io.observe(s));
 
