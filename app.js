@@ -18,15 +18,17 @@
       isDark ? "Переключить на светлый режим" : "Переключить на тёмный режим"
     );
     themeToggle.innerHTML = isDark
-      ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2m0 14v2M5 5l1.5 1.5M17.5 17.5L19 19M3 12h2m14 0h2M5 19l1.5-1.5M17.5 6.5L19 5"/><circle cx="12" cy="12" r="4.5"/></svg>'
-      : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 0 1 11.21 3 7 7 0 0 0 12 19a7 7 0 0 0 9-6.21Z"/></svg>';
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.2M12 19.8V22M4.93 4.93l1.56 1.56M17.51 17.51l1.56 1.56M2 12h2.2M19.8 12H22M4.93 19.07l1.56-1.56M17.51 6.49l1.56-1.56"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A8.5 8.5 0 1 1 11.2 3 6.8 6.8 0 0 0 21 12.8Z"/></svg>';
   }
 
-  themeToggle && themeToggle.addEventListener("click", () => {
-    theme = theme === "dark" ? "light" : "dark";
-    root.setAttribute("data-theme", theme);
-    renderThemeButton();
-  });
+  if (themeToggle) {
+    themeToggle.addEventListener("click", () => {
+      theme = theme === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", theme);
+      renderThemeButton();
+    });
+  }
   renderThemeButton();
 
   images.forEach((img) => {
@@ -55,6 +57,7 @@
     const center = window.innerHeight * 0.45;
     let best = slides[0];
     let bestDistance = Infinity;
+
     slides.forEach((slide) => {
       const rect = slide.getBoundingClientRect();
       const distance = Math.abs(rect.top - center);
@@ -63,6 +66,7 @@
         bestDistance = distance;
       }
     });
+
     activateNav(best.id);
   }
 
@@ -82,20 +86,18 @@
   function updateProgress() {
     const doc = document.documentElement;
     const max = Math.max(1, doc.scrollHeight - doc.clientHeight);
-    const ratio = Math.min(
-      1,
-      Math.max(0, (window.scrollY || doc.scrollTop || 0) / max)
-    );
-    progress && (progress.style.transform = "scaleX(" + ratio.toFixed(4) + ")");
-    if (backToTop) {
-      backToTop.classList.toggle(
-        "is-visible",
-        window.scrollY > window.innerHeight * 0.75
-      );
-    }
-  }
+    const ratio = Math.min(1, Math.max(0, (window.scrollY || doc.scrollTop || 0) / max));
 
-  updateActiveNav();
+    if (progress) {
+      progress.style.transform = "scaleX(" + ratio.toFixed(4) + ")";
+    }
+
+    if (backToTop) {
+      backToTop.classList.toggle("is-visible", window.scrollY > window.innerHeight * 0.75);
+    }
+
+    updateActiveNav();
+  }
 
   const revealObserver =
     "IntersectionObserver" in window
@@ -114,21 +116,10 @@
     else slide.classList.add("is-visible");
   });
 
-  window.addEventListener("scroll", () => {
-    updateProgress();
-    updateActiveNav();
-  }, { passive: true });
-  window.addEventListener("resize", () => {
-    updateProgress();
-    updateActiveNav();
-  });
-  window.addEventListener("load", () => {
-    updateProgress();
-    updateActiveNav();
-  });
+  window.addEventListener("scroll", updateProgress, { passive: true });
+  window.addEventListener("resize", updateProgress);
+  window.addEventListener("load", updateProgress);
   updateProgress();
-
-  /* Аудиоплеер */
 
   const audio = document.getElementById("audio");
   const btnPlay = document.getElementById("btnPlay");
@@ -162,63 +153,80 @@
 
   if (audio) {
     audio.volume = parseFloat(vol && vol.value ? vol.value : "0.55");
-    audio.load();
+    audio.preload = "metadata";
 
     const markAudioReady = () => {
       audioAvailable = true;
-      setStatus("М. Ипполитов‑Иванов · Симфония №1");
+      setStatus("М. Ипполитов-Иванов · Симфония №1");
       if (btnPlay) btnPlay.disabled = false;
+      syncPlayIcon();
+    };
+
+    const markAudioMissing = () => {
+      audioAvailable = false;
+      setStatus("Музыка ожидает файл symphony-preview.mp3");
+      if (btnPlay) btnPlay.disabled = true;
       syncPlayIcon();
     };
 
     audio.addEventListener("loadedmetadata", markAudioReady);
     audio.addEventListener("canplay", markAudioReady);
+    audio.addEventListener("play", syncPlayIcon);
+    audio.addEventListener("pause", syncPlayIcon);
 
-    audio.addEventListener("error", () => {
-      audioAvailable = false;
-      setStatus("Музыка ожидает файл symphony.mp3");
-      if (btnPlay) btnPlay.disabled = true;
-      syncPlayIcon();
-    });
+    audio.addEventListener("error", markAudioMissing);
 
-    btnPlay &&
+    if (audio.readyState >= 1) {
+      markAudioReady();
+    } else {
+      markAudioMissing();
+      audio.load();
+    }
+
+    if (btnPlay) {
       btnPlay.addEventListener("click", (event) => {
         event.preventDefault();
         if (!audioAvailable) return;
+
         if (audio.paused) {
           audio
             .play()
-            .then(syncPlayIcon)
-            .catch(() =>
-              setStatus("Нажмите ещё раз для запуска музыки")
-            );
+            .then(() => {
+              syncPlayIcon();
+              setStatus("М. Ипполитов-Иванов · Симфония №1");
+            })
+            .catch(() => {
+              setStatus("Нажмите ещё раз для запуска музыки");
+            });
         } else {
           audio.pause();
           syncPlayIcon();
         }
       });
+    }
 
-    btnMute &&
+    if (btnMute) {
       btnMute.addEventListener("click", (event) => {
         event.preventDefault();
         muted = !muted;
         audio.muted = muted;
         syncMuteIcon();
       });
+    }
 
-    vol &&
+    if (vol) {
       vol.addEventListener("input", (event) => {
         const value = parseFloat(event.target.value);
         audio.volume = value;
+
         if (muted && value > 0) {
           muted = false;
           audio.muted = false;
           syncMuteIcon();
         }
       });
+    }
 
-    audio.addEventListener("play", syncPlayIcon);
-    audio.addEventListener("pause", syncPlayIcon);
     syncMuteIcon();
     syncPlayIcon();
   }
