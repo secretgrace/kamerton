@@ -139,7 +139,7 @@
   }
 
   function syncPlayIcon() {
-    const playing = audio && !audio.paused && audioAvailable;
+    const playing = audio && !audio.paused && !audio.ended;
     if (iconPlay) iconPlay.style.display = playing ? "none" : "";
     if (iconPause) iconPause.style.display = playing ? "" : "none";
     if (btnPlay) btnPlay.setAttribute("aria-pressed", playing ? "true" : "false");
@@ -152,8 +152,8 @@
   }
 
   if (audio) {
-    audio.volume = parseFloat(vol && vol.value ? vol.value : "0.55");
     audio.preload = "metadata";
+    audio.volume = parseFloat(vol && vol.value ? vol.value : "0.55");
 
     const markAudioReady = () => {
       audioAvailable = true;
@@ -171,37 +171,44 @@
 
     audio.addEventListener("loadedmetadata", markAudioReady);
     audio.addEventListener("canplay", markAudioReady);
+    audio.addEventListener("canplaythrough", markAudioReady);
+    audio.addEventListener("error", markAudioMissing);
     audio.addEventListener("play", syncPlayIcon);
     audio.addEventListener("pause", syncPlayIcon);
-
-    audio.addEventListener("error", markAudioMissing);
+    audio.addEventListener("ended", syncPlayIcon);
 
     if (audio.readyState >= 1) {
       markAudioReady();
     } else {
-      markAudioMissing();
+      setTimeout(() => {
+        if (audio.readyState >= 1) markAudioReady();
+        else markAudioMissing();
+      }, 1200);
       audio.load();
     }
 
     if (btnPlay) {
-      btnPlay.addEventListener("click", (event) => {
+      btnPlay.addEventListener("click", async (event) => {
         event.preventDefault();
-        if (!audioAvailable) return;
+
+        if (!audioAvailable) {
+          audio.load();
+          setStatus("Пробуем загрузить музыку…");
+          return;
+        }
 
         if (audio.paused) {
-          audio
-            .play()
-            .then(() => {
-              syncPlayIcon();
-              setStatus("М. Ипполитов-Иванов · Симфония №1");
-            })
-            .catch(() => {
-              setStatus("Нажмите ещё раз для запуска музыки");
-            });
+          try {
+            await audio.play();
+            setStatus("М. Ипполитов-Иванов · Симфония №1");
+          } catch (e) {
+            setStatus("Нажмите ещё раз для запуска музыки");
+          }
         } else {
           audio.pause();
-          syncPlayIcon();
         }
+
+        syncPlayIcon();
       });
     }
 
