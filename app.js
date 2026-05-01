@@ -152,7 +152,7 @@
   }
 
   if (audio) {
-    audio.preload = "metadata";
+    audio.preload = "auto";
     audio.volume = parseFloat(vol && vol.value ? vol.value : "0.55");
 
     const markAudioReady = () => {
@@ -187,9 +187,42 @@
       audio.load();
     }
 
+    // Автовоспроизведение при первом взаимодействии
+    let autoplayAttempted = false;
+
+    function tryAutoplay() {
+      if (autoplayAttempted || !audioAvailable) return;
+      autoplayAttempted = true;
+      audio.play()
+        .then(() => {
+          setStatus("М. Ипполитов-Иванов · Симфония №1");
+          syncPlayIcon();
+        })
+        .catch(() => {
+          // браузер заблокировал — ничего не делаем, кнопка Play работает вручную
+        });
+    }
+
+    // Пробуем сразу (работает в Safari и некоторых браузерах)
+    setTimeout(() => {
+      audio.play()
+        .then(() => {
+          autoplayAttempted = true;
+          setStatus("М. Ипполитов-Иванов · Симфония №1");
+          syncPlayIcon();
+        })
+        .catch(() => {
+          // Ждём первого действия пользователя
+          ["click", "keydown", "scroll", "touchstart"].forEach((event) => {
+            document.addEventListener(event, tryAutoplay, { once: true, passive: true });
+          });
+        });
+    }, 800);
+
     if (btnPlay) {
       btnPlay.addEventListener("click", async (event) => {
         event.preventDefault();
+        autoplayAttempted = true;
 
         if (!audioAvailable) {
           audio.load();
@@ -225,7 +258,6 @@
       vol.addEventListener("input", (event) => {
         const value = parseFloat(event.target.value);
         audio.volume = value;
-
         if (muted && value > 0) {
           muted = false;
           audio.muted = false;
